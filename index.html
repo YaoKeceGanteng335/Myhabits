@@ -20,6 +20,10 @@ tailwind.config = {
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-storage-compat.js"></script>
+
+<!-- ============ SORTABLEJS (Untuk Drag & Drop) ============ -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
 <style>
   * { -webkit-tap-highlight-color: transparent; }
@@ -27,7 +31,7 @@ tailwind.config = {
   .glass-pill { background: rgba(83, 93, 112, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
   .hero-sky-bg { background: linear-gradient(180deg, #1b539c 0%, #3075c7 45%, #60a5fa 78%, #ebf4ff 100%); }
   
-  /* Style untuk custom background header */
+  /* Style untuk custom background */
   .header-custom-bg {
     background-size: cover !important;
     background-position: center !important;
@@ -183,14 +187,13 @@ tailwind.config = {
 </head>
 <body class="bg-[#F4F7FC] text-slate-800 antialiased min-h-screen flex justify-center selection:bg-blue-500 selection:text-white font-sans">
 
-<main class="w-full max-w-[420px] min-h-screen bg-[#F6F8FC] relative pb-28 shadow-2xl flex flex-col overflow-x-hidden">
+<main class="w-full max-w-[420px] min-h-screen bg-[#F6F8FC] relative pb-28 shadow-2xl flex flex-col overflow-x-hidden transition-all duration-300">
 
   <!-- ==================== PAGE: HOME ==================== -->
   <section id="page-home" class="page flex-1 flex flex-col">
     <!-- Header dengan ID untuk manipulasi background -->
-    <header id="home-header" class="relative hero-sky-bg pb-6 px-5 rounded-b-[36px] shadow-sm overflow-hidden text-white pt-5 transition-all duration-300">
+    <header id="home-header" class="relative hero-sky-bg pb-6 px-5 rounded-b-[36px] shadow-sm overflow-hidden text-white pt-5 transition-all duration-300 z-10">
       
-      <!-- Overlay gelap transparan agar teks tetap terbaca jika pakai background gambar -->
       <div id="header-overlay" class="hidden absolute inset-0 header-overlay pointer-events-none z-0"></div>
 
       <div aria-hidden="true" class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden z-0">
@@ -211,7 +214,6 @@ tailwind.config = {
           <p class="text-xs text-white/90 font-medium mt-0.5 drop-shadow-md">Bangun kebiasaan, raih versi terbaikmu!</p>
         </div>
         
-        <!-- TOMBOL NOTIFIKASI -->
         <button id="btn-notif" aria-label="Notifikasi" class="relative w-10 h-10 rounded-full bg-white text-blue-600 shadow-md border border-slate-100 flex items-center justify-center active:scale-95 transition-transform z-10" type="button">
           <i class="fa-regular fa-bell text-lg"></i>
           <span id="notif-dot" class="hidden absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
@@ -271,7 +273,7 @@ tailwind.config = {
     <div class="px-5 mt-5 space-y-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <h3 class="text-base font-bold text-slate-800 tracking-tight">Habit Hari Ini</h3>
+          <h3 class="text-base font-bold text-slate-800 tracking-tight drop-shadow-sm">Habit Hari Ini</h3>
           <span class="bg-blue-100 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full" id="habit-total">0 Total</span>
         </div>
         <a class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5" href="#lihat-semua">
@@ -279,6 +281,8 @@ tailwind.config = {
           <i class="fa-solid fa-chevron-right text-[10px]"></i>
         </a>
       </div>
+      
+      <!-- Container Habit (Sortable) -->
       <div id="habit-checklist-group" class="space-y-3"></div>
 
       <div id="habit-empty-state">
@@ -312,12 +316,12 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: STATISTIK ==================== -->
-  <section id="page-stats" class="page hidden flex-1 flex flex-col">
+  <section id="page-stats" class="page hidden flex-1 flex-col z-10">
     <nav class="px-6 py-3 flex items-center justify-between">
       <button aria-label="Kembali" data-goto="home" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
         <i class="fa-solid fa-chevron-left text-base"></i>
       </button>
-      <h1 class="text-lg font-bold text-slate-800 tracking-tight text-center flex-1 pr-1">Riwayat Habit</h1>
+      <h1 class="text-lg font-bold text-slate-800 tracking-tight text-center flex-1 pr-1 drop-shadow-sm">Riwayat Habit</h1>
       <button aria-label="Pilih Tanggal" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
         <i class="fa-regular fa-calendar text-base"></i>
       </button>
@@ -373,7 +377,7 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: CELEBRATION ==================== -->
-  <section id="page-celebrate" class="page hidden flex-1 flex-col relative overflow-hidden">
+  <section id="page-celebrate" class="page hidden flex-1 flex-col relative overflow-hidden z-10">
     <div class="absolute inset-0 sky-gradient pointer-events-none z-0 overflow-hidden">
       <div class="absolute -bottom-10 -left-12 w-64 h-64 rounded-full bg-white/70 blur-2xl"></div>
       <div class="absolute -bottom-8 -right-12 w-72 h-72 rounded-full bg-white/80 blur-2xl"></div>
@@ -439,8 +443,8 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: DETAIL HABIT ==================== -->
-  <section id="page-detail" class="page hidden flex-1 flex flex-col">
-    <nav class="px-5 py-3 flex items-center justify-between relative pt-4 flex-shrink-0">
+  <section id="page-detail" class="page hidden flex-1 flex-col z-10">
+    <nav class="px-5 py-3 flex items-center justify-between relative pt-4 flex-shrink-0 bg-white/80 backdrop-blur-md">
       <button aria-label="Kembali" data-goto="home" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:scale-95 transition" type="button">
         <i class="fa-solid fa-chevron-left text-base"></i>
       </button>
@@ -462,7 +466,7 @@ tailwind.config = {
 
         <section>
           <div class="flex justify-between items-center mb-3">
-            <h3 class="text-sm font-bold text-slate-900">Statistik</h3>
+            <h3 class="text-sm font-bold text-slate-900 drop-shadow-sm">Statistik</h3>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-white rounded-2xl p-3 pt-3.5 pb-3 flex flex-col items-center justify-center shadow-sm border border-slate-100 text-center">
@@ -491,7 +495,7 @@ tailwind.config = {
 
         <section>
           <div class="flex justify-between items-center mb-3">
-            <h3 class="text-sm font-bold text-slate-900">Catatan</h3>
+            <h3 class="text-sm font-bold text-slate-900 drop-shadow-sm">Catatan</h3>
           </div>
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
@@ -513,8 +517,8 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: TAMBAH ==================== -->
-  <section id="page-add" class="page hidden flex-1 flex flex-col">
-    <nav class="px-5 py-3 flex items-center justify-between relative flex-shrink-0">
+  <section id="page-add" class="page hidden flex-1 flex-col z-10">
+    <nav class="px-5 py-3 flex items-center justify-between relative flex-shrink-0 bg-white/80 backdrop-blur-md">
       <button aria-label="Kembali" data-goto="home" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:bg-slate-200/60 transition-colors" type="button">
         <i class="fa-solid fa-chevron-left text-base"></i>
       </button>
@@ -618,8 +622,8 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: PROFIL ==================== -->
-  <section id="page-profile" class="page hidden flex-1 flex flex-col">
-    <div class="px-5 py-3 flex items-center justify-between pt-4">
+  <section id="page-profile" class="page hidden flex-1 flex-col z-10">
+    <div class="px-5 py-3 flex items-center justify-between pt-4 bg-white/80 backdrop-blur-md">
       <button aria-label="Kembali" data-goto="home" class="w-9 h-9 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-700 active:scale-95 transition-transform">
         <i class="fa-solid fa-chevron-left text-sm"></i>
       </button>
@@ -627,7 +631,7 @@ tailwind.config = {
       <div class="w-9"></div>
     </div>
 
-    <div class="flex-1 px-4 space-y-4 pt-1">
+    <div class="flex-1 px-4 space-y-4 pt-4 pb-6">
       <section id="profile-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer active:bg-slate-50/70 transition-colors">
         <div class="flex items-center space-x-3.5">
           <div class="relative">
@@ -780,7 +784,7 @@ tailwind.config = {
 <div id="modal-root" class="fixed inset-0 z-[200] hidden">
   <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" data-modal-close></div>
   <div class="absolute left-1/2 bottom-0 -translate-x-1/2 w-full max-w-[420px] px-4 pb-6 pt-4">
-    <div id="modal-body" class="bg-white rounded-3xl p-5 shadow-2xl"></div>
+    <div id="modal-body" class="bg-white rounded-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto"></div>
   </div>
 </div>
 
@@ -801,6 +805,7 @@ tailwind.config = {
 
   let auth = null;
   let db = null;
+  let storage = null;
   let firebaseReady = false;
 
   try {
@@ -808,6 +813,7 @@ tailwind.config = {
       firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
       db = firebase.firestore();
+      storage = firebase.storage();
       firebaseReady = true;
     }
   } catch (err) {
@@ -822,7 +828,7 @@ tailwind.config = {
   const state = {
     user: {
       name: "", status: "Member", isPro: false, isVip: false, avatar: null,
-      headerBg: null, /* Tambahan untuk background header */
+      headerBg: null, appBg: null,
       tier: "Pengguna Baru", proExpiry: "", unreadNotif: 0,
       notifEnabled: false, soundEnabled: false, darkMode: false
     },
@@ -839,6 +845,62 @@ tailwind.config = {
   const groupEl = document.getElementById("habit-checklist-group");
   const emptyEl = document.getElementById("habit-empty-state");
   const noneTodayEl = document.getElementById("habit-none-today");
+
+  /* =====================================================
+     DATE HELPERS (RESET JAM 1 PAGI)
+     ===================================================== */
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function dateKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+  
+  // Fungsi untuk mendapatkan tanggal "logis" di mana jam 00:00 - 00:59 masih dihitung hari sebelumnya.
+  function getLogicalDate() {
+    const now = new Date();
+    if (now.getHours() === 0) { 
+      now.setDate(now.getDate() - 1);
+    }
+    return now;
+  }
+
+  // Timer untuk mereset habit tepat jam 01:00 malam
+  function setupMidnightReset() {
+    const now = new Date();
+    const next1AM = new Date();
+    next1AM.setHours(1, 0, 0, 0);
+    
+    if (now.getTime() >= next1AM.getTime()) {
+      next1AM.setDate(next1AM.getDate() + 1);
+    }
+    
+    const timeUntilReset = next1AM.getTime() - now.getTime();
+    setTimeout(() => {
+      renderHome();
+      if (currentPage === "stats") renderStats();
+      setupMidnightReset();
+    }, timeUntilReset);
+  }
+
+  const ALL_DAYS = [0,1,2,3,4,5,6];
+  const WORK_DAYS = [1,2,3,4,5];
+  const DAY_ORDER = [1,2,3,4,5,6,0];
+  const DAYS = [
+    { v: 1, short: 'Sen', full: 'Senin'  },
+    { v: 2, short: 'Sel', full: 'Selasa' },
+    { v: 3, short: 'Rab', full: 'Rabu'   },
+    { v: 4, short: 'Kam', full: 'Kamis'  },
+    { v: 5, short: 'Jum', full: 'Jumat'  },
+    { v: 6, short: 'Sab', full: 'Sabtu'  },
+    { v: 0, short: 'Min', full: 'Minggu' }
+  ];
+
+  function getHabitDays(habit) {
+    return (Array.isArray(habit.days) && habit.days.length) ? habit.days : ALL_DAYS;
+  }
+  function isHabitDay(habit, date) {
+    return getHabitDays(habit).includes(date.getDay());
+  }
+  function isHabitToday(habit) {
+    return isHabitDay(habit, new Date());
+  }
 
   /* =====================================================
      CLOUD SYNC
@@ -871,7 +933,8 @@ tailwind.config = {
           darkMode: state.user.darkMode,
           notifEnabled: state.user.notifEnabled,
           soundEnabled: state.user.soundEnabled,
-          headerBg: state.user.headerBg /* Sinkronisasi background header */
+          headerBg: state.user.headerBg,
+          appBg: state.user.appBg
         },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -900,7 +963,8 @@ tailwind.config = {
         state.user.darkMode   = !!p.darkMode;
         state.user.notifEnabled = !!p.notifEnabled;
         state.user.soundEnabled = !!p.soundEnabled;
-        state.user.headerBg   = p.headerBg || null; /* Ambil background dari cloud */
+        state.user.headerBg   = p.headerBg || null;
+        state.user.appBg      = p.appBg || null;
       }
       recomputeGlobalStats();
       saveLocalOnly();
@@ -979,32 +1043,34 @@ tailwind.config = {
   });
 
   /* =====================================================
-     DATE HELPERS
+     APPLY BACKGROUNDS
      ===================================================== */
-  function pad2(n) { return String(n).padStart(2, "0"); }
-  function dateKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+  function applyBackgrounds() {
+    // 1. App Background (Wallpaper utama)
+    const mainEl = document.querySelector("main");
+    if (state.user.appBg) {
+      mainEl.style.backgroundImage = `url('${state.user.appBg}')`;
+      mainEl.style.backgroundSize = "cover";
+      mainEl.style.backgroundPosition = "center";
+      mainEl.style.backgroundAttachment = "fixed";
+      mainEl.classList.remove("bg-[#F6F8FC]");
+    } else {
+      mainEl.style.backgroundImage = "none";
+      mainEl.classList.add("bg-[#F6F8FC]");
+    }
 
-  const ALL_DAYS = [0,1,2,3,4,5,6];
-  const WORK_DAYS = [1,2,3,4,5];
-  const DAY_ORDER = [1,2,3,4,5,6,0];
-  const DAYS = [
-    { v: 1, short: 'Sen', full: 'Senin'  },
-    { v: 2, short: 'Sel', full: 'Selasa' },
-    { v: 3, short: 'Rab', full: 'Rabu'   },
-    { v: 4, short: 'Kam', full: 'Kamis'  },
-    { v: 5, short: 'Jum', full: 'Jumat'  },
-    { v: 6, short: 'Sab', full: 'Sabtu'  },
-    { v: 0, short: 'Min', full: 'Minggu' }
-  ];
-
-  function getHabitDays(habit) {
-    return (Array.isArray(habit.days) && habit.days.length) ? habit.days : ALL_DAYS;
-  }
-  function isHabitDay(habit, date) {
-    return getHabitDays(habit).includes(date.getDay());
-  }
-  function isHabitToday(habit) {
-    return isHabitDay(habit, new Date());
+    // 2. Header Background
+    const headerEl = document.getElementById("home-header");
+    const overlayEl = document.getElementById("header-overlay");
+    if (state.user.headerBg) {
+      headerEl.style.backgroundImage = `url('${state.user.headerBg}')`;
+      headerEl.classList.add("header-custom-bg");
+      overlayEl.classList.remove("hidden");
+    } else {
+      headerEl.style.backgroundImage = "none";
+      headerEl.classList.remove("header-custom-bg");
+      overlayEl.classList.add("hidden");
+    }
   }
 
   /* =====================================================
@@ -1077,7 +1143,7 @@ tailwind.config = {
   }
 
   /* =====================================================
-     HOME RENDER
+     HOME RENDER (DRAG & DROP)
      ===================================================== */
   function habitIconHTML(h, size) {
     const cls = size === "lg" ? "text-3xl" : "text-2xl";
@@ -1090,13 +1156,15 @@ tailwind.config = {
   function habitCardHTML(h) {
     const checked = !!h.done;
     return `
-    <article class="habit-item bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100 transition-all cursor-pointer"
-             data-id="${esc(h.id)}" data-checked="${checked}">
-      <div class="flex items-center space-x-3.5 min-w-0">
+    <article class="habit-item bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100 transition-all" data-id="${esc(h.id)}">
+      <div class="flex items-center space-x-2.5 min-w-0 w-full">
+        <div class="habit-drag-handle text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing p-1 -ml-1 flex-shrink-0">
+          <i class="fa-solid fa-grip-vertical text-sm"></i>
+        </div>
         <div class="w-11 h-11 rounded-xl ${esc(h.bg || 'bg-slate-100')} flex items-center justify-center flex-shrink-0">
           ${habitIconHTML(h)}
         </div>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1 cursor-pointer">
           <h4 class="text-sm font-bold ${checked ? 'text-slate-400 line-through' : 'text-slate-800'} truncate">${esc(h.title)}</h4>
           <div class="flex items-center text-xs text-slate-400 font-medium space-x-1 mt-0.5 min-w-0">
             <i class="fa-solid ${checked ? 'fa-check text-blue-500' : 'fa-check text-slate-300'} text-[10px] flex-shrink-0"></i>
@@ -1117,6 +1185,9 @@ tailwind.config = {
 
   function renderHome() {
     const { habits, stats, user } = state;
+    
+    applyBackgrounds();
+
     document.getElementById("user-name").textContent   = user.name || "Pengguna";
     document.getElementById("user-status").textContent = user.status || "Member";
     document.getElementById("pro-badge").classList.toggle("hidden", !user.isPro);
@@ -1128,21 +1199,16 @@ tailwind.config = {
       ? `<img src="${esc(user.avatar)}" class="w-full h-full object-cover object-top" alt="Foto profil">`
       : `<i class="fa-solid fa-user text-2xl"></i>`;
 
-    // Render Background Header
-    const headerEl = document.getElementById("home-header");
-    const overlayEl = document.getElementById("header-overlay");
-    if (user.headerBg) {
-      headerEl.style.backgroundImage = `url('${user.headerBg}')`;
-      headerEl.classList.add("header-custom-bg");
-      overlayEl.classList.remove("hidden"); // Munculkan overlay gelap
-    } else {
-      headerEl.style.backgroundImage = "none";
-      headerEl.classList.remove("header-custom-bg");
-      overlayEl.classList.add("hidden"); // Sembunyikan overlay
-    }
-
     document.getElementById("stat-streak").textContent = stats.streak;
     document.getElementById("stat-total").textContent  = stats.totalDone;
+
+    // Gunakan Logical Date untuk mengecek apakah habit selesai hari ini (reset jam 1 pagi)
+    const logicalToday = getLogicalDate();
+    const logicalTodayKey = dateKey(logicalToday);
+    
+    state.habits.forEach(h => {
+      h.done = !!h.history[logicalTodayKey];
+    });
 
     const todayHabits = habits.filter(isHabitToday);
     document.getElementById("habit-total").textContent = todayHabits.length + " Total";
@@ -1150,6 +1216,34 @@ tailwind.config = {
 
     emptyEl.classList.toggle("hidden", habits.length > 0);
     noneTodayEl.classList.toggle("hidden", !(habits.length > 0 && todayHabits.length === 0));
+
+    // Inisialisasi Drag and Drop menggunakan SortableJS
+    if (typeof Sortable !== 'undefined' && !groupEl._sortable) {
+      groupEl._sortable = new Sortable(groupEl, {
+        animation: 150,
+        handle: '.habit-drag-handle',
+        ghostClass: 'opacity-50',
+        onEnd: function (evt) {
+          const items = Array.from(groupEl.children);
+          const orderedIds = items.map(el => el.dataset.id);
+          
+          const ordered = [];
+          orderedIds.forEach(id => {
+            const h = state.habits.find(x => String(x.id) === String(id));
+            if (h) ordered.push(h);
+          });
+          
+          // Sisa habit yang tidak masuk hari ini taruh di bawah
+          state.habits.forEach(h => {
+            if (!orderedIds.includes(String(h.id))) ordered.push(h);
+          });
+          
+          state.habits = ordered;
+          save();
+          renderHome();
+        }
+      });
+    }
   }
 
   /* =====================================================
@@ -1209,6 +1303,8 @@ tailwind.config = {
      ===================================================== */
   function renderProfile() {
     const { user, stats } = state;
+    applyBackgrounds();
+
     document.getElementById("profile-name").textContent = user.name || "Pengguna";
 
     const badge = document.getElementById("profile-tier-badge");
@@ -1336,7 +1432,10 @@ tailwind.config = {
     document.getElementById("stats-empty-hint").classList.toggle("hidden", hasHistory);
   }
 
-  function renderStats() { renderCalendar(); }
+  function renderStats() { 
+    applyBackgrounds();
+    renderCalendar(); 
+  }
 
   document.getElementById("cal-prev").addEventListener("click", () => {
     calState.month--;
@@ -1509,7 +1608,7 @@ tailwind.config = {
   }
 
   /* =====================================================
-     AUTH MODAL (EMAIL / PASSWORD)
+     AUTH MODAL
      ===================================================== */
   let authMode = "login"; 
 
@@ -1762,18 +1861,26 @@ tailwind.config = {
      EVENT LISTENERS
      ===================================================== */
   groupEl.addEventListener("click", (e) => {
+    // Abaikan klik pada drag handle agar tidak memicu detail
+    if (e.target.closest(".habit-drag-handle")) return;
+
     const btn = e.target.closest(".habit-toggle-btn");
     if (btn) {
       const card = btn.closest(".habit-item");
       const habit = state.habits.find(h => String(h.id) === String(card.dataset.id));
       if (!habit) return;
+      
+      // Gunakan Logical Date untuk toggle
+      const logicalTodayKey = dateKey(getLogicalDate());
+      
       habit.done = !habit.done;
       if (!habit.history) habit.history = {};
-      const key = dateKey(new Date());
-      if (habit.done) habit.history[key] = 1;
-      else delete habit.history[key];
+      if (habit.done) habit.history[logicalTodayKey] = 1;
+      else delete habit.history[logicalTodayKey];
+      
       recomputeGlobalStats();
       save();
+      
       if (habit.done) {
         celebratedHabitId = habit.id;
         showPage("celebrate");
@@ -1853,25 +1960,25 @@ tailwind.config = {
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fa-solid fa-check text-[10px]"></i>
           </div>
-          <p class="text-xs text-slate-600 leading-snug">Rilis perdana aplikasi <b>MyHabits</b>.</p>
+          <p class="text-xs text-slate-600 leading-snug">Habit ter-reset otomatis setiap jam 1 pagi.</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Bisa atur urutan habit (drag & drop ikon garis di kiri).</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Pasang Wallpaper aplikasi & Header (Mendukung GIF).</p>
         </div>
         <div class="flex items-start space-x-3">
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fa-solid fa-check text-[10px]"></i>
           </div>
           <p class="text-xs text-slate-600 leading-snug">Sinkronisasi cloud (Firebase) untuk backup data otomatis.</p>
-        </div>
-        <div class="flex items-start space-x-3">
-          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-            <i class="fa-solid fa-check text-[10px]"></i>
-          </div>
-          <p class="text-xs text-slate-600 leading-snug">Kustomisasi Background Header dengan Foto atau GIF.</p>
-        </div>
-        <div class="flex items-start space-x-3">
-          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-            <i class="fa-solid fa-check text-[10px]"></i>
-          </div>
-          <p class="text-xs text-slate-600 leading-snug">Pengingat fleksibel: Bisa setel alarm atau tanpa jam.</p>
         </div>
       </div>
 
@@ -1947,17 +2054,23 @@ tailwind.config = {
     }
   });
 
-  /* ---------- MODAL: EDIT PROFIL ---------- */
+  /* ---------- MODAL: EDIT PROFIL & WALLPAPER ---------- */
   let pendingAvatar = null;
-  let pendingHeaderBg = null; // Variabel penampung sementara background
+  let pendingHeaderBg = null;
+  let pendingHeaderFile = null;
+  let pendingAppBg = null;
+  let pendingAppFile = null;
 
   function openProfileModal() {
     pendingAvatar = state.user.avatar || null;
-    pendingHeaderBg = state.user.headerBg || null; // Set nilai awal
+    pendingHeaderBg = state.user.headerBg || null;
+    pendingAppBg = state.user.appBg || null;
+    pendingHeaderFile = null; 
+    pendingAppFile = null;
 
     openModal(`
-      <h3 class="text-base font-bold text-slate-800 mb-1">Edit Profil</h3>
-      <p class="text-[11px] text-slate-500 mb-4">Ubah nama, foto, dan background header kamu.</p>
+      <h3 class="text-base font-bold text-slate-800 mb-1">Edit Profil & Tampilan</h3>
+      <p class="text-[11px] text-slate-500 mb-4">Ubah nama, foto, dan atur background aplikasi.</p>
       
       <div class="flex flex-col items-center mb-4">
         <div id="avatar-preview" class="w-20 h-20 rounded-full overflow-hidden bg-blue-100 border-2 border-blue-500/20 flex items-center justify-center text-blue-500 mb-2">
@@ -1971,15 +2084,26 @@ tailwind.config = {
         <input type="file" id="avatar-file" accept="image/*" class="hidden"/>
       </div>
 
-      <div class="flex flex-col items-center mb-4">
-        <button id="btn-pick-bg" type="button" class="text-[11px] font-bold text-emerald-600 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100 active:scale-95 transition flex items-center">
-          <i class="fa-solid fa-image text-[12px] mr-2"></i>Ganti Background Header (Foto/GIF)
-        </button>
-        <button id="btn-reset-bg" type="button" class="text-[10px] text-slate-400 font-semibold mt-2 hover:text-slate-600">Hapus Background</button>
-        <input type="file" id="bg-file" accept="image/*,image/gif" class="hidden"/>
+      <div class="flex flex-col items-center mb-4 border-t border-slate-100 pt-4">
+        <p class="text-xs font-bold text-slate-800 mb-2">Tampilan Latar Belakang</p>
+        <div class="flex gap-2 w-full">
+          <button id="btn-pick-header" type="button" class="flex-1 text-[11px] font-bold text-slate-700 px-3 py-2 rounded-xl bg-slate-100 active:scale-95 transition flex items-center justify-center">
+            <i class="fa-solid fa-image text-[12px] mr-2"></i>Header Saja
+          </button>
+          <button id="btn-pick-appbg" type="button" class="flex-1 text-[11px] font-bold text-slate-700 px-3 py-2 rounded-xl bg-slate-100 active:scale-95 transition flex items-center justify-center">
+            <i class="fa-solid fa-mobile-screen text-[12px] mr-2"></i>Full App
+          </button>
+        </div>
+        <div class="flex justify-between w-full mt-2 px-1">
+          <button id="btn-reset-header" type="button" class="text-[10px] text-slate-400 font-semibold hover:text-slate-600">Hapus Header</button>
+          <button id="btn-reset-appbg" type="button" class="text-[10px] text-slate-400 font-semibold hover:text-slate-600">Hapus Wallpaper</button>
+        </div>
+        <input type="file" id="header-file" accept="image/*,image/gif" class="hidden"/>
+        <input type="file" id="appbg-file" accept="image/*,image/gif" class="hidden"/>
+        <p class="text-[9px] text-slate-400 mt-2 text-center">Format: JPG, PNG, GIF. Maksimal 2MB (Premium)</p>
       </div>
 
-      <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Nama</label>
+      <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5 border-t border-slate-100 pt-3">Nama</label>
       <input id="edit-name" type="text" maxlength="30" value="${esc(state.user.name || "")}"
         placeholder="Nama kamu"
         class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all mb-4"/>
@@ -1990,6 +2114,7 @@ tailwind.config = {
       </div>
     `);
 
+    // Foto Profil
     document.getElementById("btn-pick-avatar").addEventListener("click", () => {
       document.getElementById("avatar-file").click();
     });
@@ -2003,40 +2128,85 @@ tailwind.config = {
       });
     });
 
-    // Listener Ganti Background Header
-    document.getElementById("btn-pick-bg").addEventListener("click", () => {
-      document.getElementById("bg-file").click();
+    // Header Background
+    document.getElementById("btn-pick-header").addEventListener("click", () => {
+      document.getElementById("header-file").click();
     });
-    document.getElementById("bg-file").addEventListener("change", (e) => {
+    document.getElementById("header-file").addEventListener("change", (e) => {
       const f = e.target.files && e.target.files[0];
       if (!f) return;
-
-      // Batasan ukuran file (karena Base64 disimpan di Firestore, maksimal ~800KB)
-      if (f.size > 800 * 1024) {
-        showToast("Maksimal file 800KB agar sinkronisasi lancar");
-        return;
-      }
-
-      // Baca file sebagai Data URL (Mendukung GIF tanpa merusak animasi)
+      if (f.size > 2 * 1024 * 1024) { showToast("Maksimal file 2 MB"); return; }
+      pendingHeaderFile = f;
       const reader = new FileReader();
       reader.onload = (ev) => {
         pendingHeaderBg = ev.target.result;
-        showToast("Background dipilih, klik Simpan");
+        showToast("Header dipilih, klik Simpan");
       };
       reader.readAsDataURL(f);
     });
-
-    // Listener Hapus Background
-    document.getElementById("btn-reset-bg").addEventListener("click", () => {
-      pendingHeaderBg = null;
-      showToast("Background dihapus, klik Simpan");
+    document.getElementById("btn-reset-header").addEventListener("click", () => {
+      pendingHeaderBg = null; pendingHeaderFile = null;
+      showToast("Header dihapus, klik Simpan");
     });
 
+    // App Background
+    document.getElementById("btn-pick-appbg").addEventListener("click", () => {
+      document.getElementById("appbg-file").click();
+    });
+    document.getElementById("appbg-file").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (f.size > 2 * 1024 * 1024) { showToast("Maksimal file 2 MB"); return; }
+      pendingAppFile = f;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        pendingAppBg = ev.target.result;
+        showToast("Wallpaper dipilih, klik Simpan");
+      };
+      reader.readAsDataURL(f);
+    });
+    document.getElementById("btn-reset-appbg").addEventListener("click", () => {
+      pendingAppBg = null; pendingAppFile = null;
+      showToast("Wallpaper dihapus, klik Simpan");
+    });
+
+    // Simpan Profil
     document.getElementById("save-profile").addEventListener("click", async () => {
+      const btn = document.getElementById("save-profile");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
+      
+      // Upload Header File
+      if (pendingHeaderFile && currentUser && storage) {
+        try {
+          const fileRef = storage.ref(`headers/${currentUser.uid}_${Date.now()}`);
+          await fileRef.put(pendingHeaderFile);
+          pendingHeaderBg = await fileRef.getDownloadURL();
+        } catch (err) {
+          console.error(err);
+          showToast("Gagal upload Header");
+          btn.disabled = false; btn.textContent = "Simpan"; return;
+        }
+      }
+      
+      // Upload App File
+      if (pendingAppFile && currentUser && storage) {
+        try {
+          const fileRef = storage.ref(`backgrounds/${currentUser.uid}_app_${Date.now()}`);
+          await fileRef.put(pendingAppFile);
+          pendingAppBg = await fileRef.getDownloadURL();
+        } catch (err) {
+          console.error(err);
+          showToast("Gagal upload Wallpaper");
+          btn.disabled = false; btn.textContent = "Simpan"; return;
+        }
+      }
+
       const n = document.getElementById("edit-name").value.trim();
       state.user.name = n || "Pengguna";
       state.user.avatar = pendingAvatar;
-      state.user.headerBg = pendingHeaderBg; // Simpan perubahan background
+      state.user.headerBg = pendingHeaderBg;
+      state.user.appBg = pendingAppBg;
       
       if (!state.user.tier || state.user.tier === "Pengguna Baru") {
         state.user.tier = state.habits.length > 0 ? "Pejuang Habit" : "Pengguna Baru";
@@ -2046,7 +2216,7 @@ tailwind.config = {
         try { await currentUser.updateProfile({ displayName: n }); } catch (_) {}
       }
       renderHome(); renderProfile(); closeModal();
-      showToast("Profil diperbarui ✨");
+      showToast("Profil & Tampilan diperbarui ✨");
     });
   }
 
@@ -2472,7 +2642,7 @@ tailwind.config = {
       id: generateId(),
       title: name,
       subtitle,
-      twa: selectedEmoji.twa, // Simpan kelas twa
+      twa: selectedEmoji.twa,
       bg: selectedEmoji.bg,
       done: false,
       time: timeStr,
@@ -2505,6 +2675,7 @@ tailwind.config = {
   renderEmojiGrid();
   setFrequency('daily', true);
   setTimeType('alarm');
+  setupMidnightReset();
   startReminderLoop();
 
   window.HabitApp = { state, showPage, renderHome, renderProfile, renderStats, renderDetail, openDetail, save, load };
