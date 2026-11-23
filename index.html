@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>MyHabits</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { brand:{50:'#eef6ff',100:'#d9ecff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af'} },
+    fontFamily: { sans:['-apple-system','BlinkMacSystemFont','"SF Pro Text"','"SF Pro Display"','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] }
+  }}
+}
+</script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/SebastianAigner/twemoji-amazing/twemoji-amazing.css"/>
+
+<!-- ============ FIREBASE SDK (compat) ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { touch-action: manipulation; user-select: none; }
+  .glass-pill { background: rgba(83, 93, 112, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .hero-sky-bg { background: linear-gradient(180deg, #1b539c 0%, #3075c7 45%, #60a5fa 78%, #ebf4ff 100%); }
+  
+  /* Style untuk custom background header */
+  .header-custom-bg {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+  .header-overlay {
+    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 100%);
+  }
+
+  ::-webkit-scrollbar { display: none; }
+  .twa { display: inline-block; vertical-align: middle; }
+
+  @keyframes nav-enter {
+    0%   { transform: translate(-50%, 140%) scale(0.85); opacity: 0; }
+    70%  { transform: translate(-50%, -4px) scale(1.02); opacity: 1; }
+    100% { transform: translate(-50%, 0) scale(1);        opacity: 1; }
+  }
+  #bottom-nav { animation: nav-enter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  @keyframes pill-pop {
+    0%   { transform: scale(0.6); opacity: 0.3; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  .nav-pill-active { animation: pill-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  @keyframes icon-bounce {
+    0%   { transform: scale(0.4); }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  .nav-pill-active > i { animation: icon-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  @keyframes plus-icon-in {
+    0%   { transform: scale(0.3) rotate(-180deg); }
+    60%  { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  .nav-pill-active > i.fa-plus { animation: plus-icon-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  .nav-ripple {
+    position: absolute; width: 10px; height: 10px;
+    background: rgba(255,255,255,0.5); border-radius: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    animation: ripple 0.6s ease-out forwards; pointer-events: none;
+  }
+  @keyframes ripple { to { transform: translate(-50%,-50%) scale(10); opacity: 0; } }
+
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page:not(.hidden) { animation: page-fade-in 0.3s ease-out both; }
+
+  @keyframes nav-icon-fade {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .nav-icon-inactive { animation: nav-icon-fade 0.35s ease-out both; }
+
+  .cal-day { transition: transform 0.15s ease; }
+  .cal-day:active { transform: scale(0.92); }
+
+  #icon-preview { transition: all 0.2s ease; }
+  .emoji-opt { transition: transform 0.15s ease; }
+  .freq-btn, .rt-btn { transition: all 0.2s ease; }
+  .habit-item { transition: background-color 0.15s ease; }
+  .habit-item:active { background-color: rgb(248 250 252); }
+
+  body.hide-nav #bottom-nav { display: none !important; }
+  body.typing #bottom-nav { display: none !important; }
+  body.modal-open #bottom-nav { display: none !important; }
+
+  .day-chip {
+    height: 2.25rem; border-radius: 0.75rem;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    background: #f1f5f9; color: #64748b;
+    transition: all 0.18s ease;
+  }
+  .day-chip:active { transform: scale(0.92); }
+  .day-chip.day-chip-active {
+    background: #2563eb; color: #ffffff;
+    box-shadow: 0 4px 12px -2px rgba(37,99,235,0.45);
+  }
+
+  @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  #modal-body { animation: sheet-up 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  .sky-gradient {
+    background: linear-gradient(180deg, #d8ecfe 0%, #e6f3ff 35%, #f4f9ff 70%, #edf5fd 100%);
+  }
+  .glow-circle {
+    box-shadow: 0 10px 30px -4px rgba(37, 99, 235, 0.4), 0 0 45px rgba(96, 165, 250, 0.3);
+  }
+  @keyframes celebrate-pop {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  #celebrate-circle { animation: celebrate-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50%      { opacity: 1;   transform: scale(1.15); }
+  }
+  .twinkle { animation: twinkle 1.6s ease-in-out infinite; }
+  .twinkle-delay { animation: twinkle 1.6s ease-in-out infinite; animation-delay: 0.5s; }
+
+  /* ============ DARK MODE ============ */
+  html.dark body { background:#0b1220; }
+  html.dark main { background:#0f172a !important; }
+  html.dark .bg-white,
+  html.dark .bg-white\/95 { background-color:#1e293b !important; }
+  html.dark .text-slate-900,
+  html.dark .text-slate-800,
+  html.dark .text-slate-700 { color:#e2e8f0 !important; }
+  html.dark .text-slate-600 { color:#cbd5e1 !important; }
+  html.dark .text-slate-500,
+  html.dark .text-slate-400 { color:#94a3b8 !important; }
+  html.dark .bg-slate-100,
+  html.dark .bg-slate-50,
+  html.dark .bg-blue-50,
+  html.dark .bg-orange-50,
+  html.dark .bg-emerald-50,
+  html.dark .bg-indigo-50,
+  html.dark .bg-amber-50,
+  html.dark .bg-yellow-50,
+  html.dark .bg-rose-50,
+  html.dark .bg-red-50,
+  html.dark .bg-pink-50,
+  html.dark .bg-purple-50,
+  html.dark .bg-fuchsia-50,
+  html.dark .bg-violet-50,
+  html.dark .bg-sky-50,
+  html.dark .bg-cyan-50,
+  html.dark .bg-teal-50,
+  html.dark .bg-lime-50,
+  html.dark .bg-green-50 { background-color:#243044 !important; }
+  html.dark .bg-slate-200\/70 { background-color:#1b2536 !important; }
+  html.dark .border-slate-100,
+  html.dark .border-slate-200,
+  html.dark .border-slate-200\/80 { border-color:#293548 !important; }
+  html.dark .divide-y > * + * { border-color:#293548 !important; }
+  html.dark input,
+  html.dark textarea { background-color:#1e293b !important; color:#e2e8f0 !important; border-color:#334155 !important; }
+  html.dark input::placeholder,
+  html.dark textarea::placeholder { color:#64748b !important; }
+  html.dark .day-chip { background:#243044; color:#94a3b8; }
+  html.dark .day-chip.day-chip-active { background:#2563eb; color:#fff; }
+  html.dark .sky-gradient { background: linear-gradient(180deg,#0b1220 0%,#0f172a 55%,#111c2e 100%); }
+  html.dark .bg-blue-50\/70 { background-color:#1e3a5f !important; }
+</style>
+</head>
+<body class="bg-[#F4F7FC] text-slate-800 antialiased min-h-screen flex justify-center selection:bg-blue-500 selection:text-white font-sans">
+
+<main class="w-full max-w-[420px] min-h-screen bg-[#F6F8FC] relative pb-28 shadow-2xl flex flex-col overflow-x-hidden">
+
+  <!-- ==================== PAGE: HOME ==================== -->
+  <section id="page-home" class="page flex-1 flex flex-col">
+    <!-- Header dengan ID untuk manipulasi background -->
+    <header id="home-header" class="relative hero-sky-bg pb-6 px-5 rounded-b-[36px] shadow-sm overflow-hidden text-white pt-5 transition-all duration-300">
+      
+      <!-- Overlay gelap transparan agar teks tetap terbaca jika pakai background gambar -->
+      <div id="header-overlay" class="hidden absolute inset-0 header-overlay pointer-events-none z-0"></div>
+
+      <div aria-hidden="true" class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden z-0">
+        <div class="absolute -top-10 -right-10 w-48 h-48 bg-white/40 rounded-full blur-2xl"></div>
+        <svg class="absolute bottom-0 right-[-10px] w-52 h-44 text-blue-950 fill-current opacity-30" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <path d="M50 5 L60 20 L40 20 Z M50 18 L75 38 L25 38 Z M50 35 L90 60 L10 60 Z M50 55 L100 90 L0 90 Z"></path>
+        </svg>
+        <div class="absolute top-16 left-8 text-xl opacity-60">✦</div>
+        <div class="absolute top-28 right-16 opacity-75"><i class="twa twa-sparkles text-xs"></i></div>
+      </div>
+      
+      <div class="flex justify-between items-center mt-2 relative z-10">
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <i class="twa twa-sparkles text-xl drop-shadow-md"></i>
+            <h1 class="text-2xl font-bold tracking-tight text-white drop-shadow-md">MyHabits</h1>
+          </div>
+          <p class="text-xs text-white/90 font-medium mt-0.5 drop-shadow-md">Bangun kebiasaan, raih versi terbaikmu!</p>
+        </div>
+        
+        <!-- TOMBOL NOTIFIKASI -->
+        <button id="btn-notif" aria-label="Notifikasi" class="relative w-10 h-10 rounded-full bg-white text-blue-600 shadow-md border border-slate-100 flex items-center justify-center active:scale-95 transition-transform z-10" type="button">
+          <i class="fa-regular fa-bell text-lg"></i>
+          <span id="notif-dot" class="hidden absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+        </button>
+      </div>
+      
+      <div class="flex items-center space-x-3.5 mt-5 mb-2 relative z-10">
+        <div class="relative">
+          <div class="w-[62px] h-[62px] rounded-full ring-2 ring-white/90 overflow-hidden shadow-lg bg-slate-700 flex items-center justify-center text-white" id="banner-avatar">
+            <i class="fa-solid fa-user text-2xl"></i>
+          </div>
+          <span id="pro-badge" class="hidden absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow border border-white/80 flex items-center space-x-1">
+            <i class="fa-solid fa-crown text-[9px] text-amber-900"></i>
+            <span>Pro</span>
+          </span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center space-x-2">
+            <h2 class="text-base font-bold text-white tracking-wide drop-shadow-md" id="user-name">Pengguna</h2>
+            <span id="vip-badge" class="hidden bg-blue-800/40 text-blue-100 border border-blue-300/30 text-[10px] font-semibold px-2 py-0.5 rounded-full">VIP</span>
+          </div>
+          <p class="text-xs text-white/90 font-medium drop-shadow-md" id="user-status">Member</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="px-5 -mt-3 relative z-20">
+      <div class="grid grid-cols-2 gap-3.5">
+        <div class="bg-white rounded-2xl p-3.5 flex items-center space-x-3 shadow-md shadow-slate-200/60 border border-slate-100">
+          <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <i class="twa twa-fire text-2xl"></i>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-tight truncate">Streak Hari</span>
+            <div class="flex items-baseline space-x-1">
+              <span class="text-lg font-extrabold text-slate-800" id="stat-streak">0</span>
+              <span class="text-xs font-semibold text-slate-500">hari</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-3.5 flex items-center space-x-3 shadow-md shadow-slate-200/60 border border-slate-100">
+          <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <i class="twa twa-trophy text-2xl"></i>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-tight truncate">Total Selesai</span>
+            <div class="flex items-baseline space-x-1">
+              <span class="text-lg font-extrabold text-slate-800" id="stat-total">0</span>
+              <span class="text-xs font-semibold text-slate-500">habit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="px-5 mt-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <h3 class="text-base font-bold text-slate-800 tracking-tight">Habit Hari Ini</h3>
+          <span class="bg-blue-100 text-blue-700 font-bold text-[11px] px-2 py-0.5 rounded-full" id="habit-total">0 Total</span>
+        </div>
+        <a class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5" href="#lihat-semua">
+          <span>Lihat Semua</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </a>
+      </div>
+      <div id="habit-checklist-group" class="space-y-3"></div>
+
+      <div id="habit-empty-state">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-2">
+          <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <i class="fa-solid fa-list-check text-2xl"></i>
+          </div>
+          <h4 class="text-sm font-bold text-slate-800">Belum ada habit</h4>
+          <p class="text-[11px] text-slate-500 max-w-[240px]">
+            Yuk mulai bangun kebiasaan baikmu hari ini. Tambahkan habit pertamamu.
+          </p>
+          <button class="mt-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm shadow-blue-600/30 active:scale-95 transition-all flex items-center space-x-1.5" type="button" data-goto="add">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>Tambah Habit</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="habit-none-today" class="hidden">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-2">
+          <div class="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500">
+            <i class="fa-regular fa-calendar text-2xl"></i>
+          </div>
+          <h4 class="text-sm font-bold text-slate-800">Tidak ada habit hari ini</h4>
+          <p class="text-[11px] text-slate-500 max-w-[240px]">
+            Habit kamu dijadwalkan di hari lain. Nikmati istirahatmu!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PAGE: STATISTIK ==================== -->
+  <section id="page-stats" class="page hidden flex-1 flex flex-col">
+    <nav class="px-6 py-3 flex items-center justify-between">
+      <button aria-label="Kembali" data-goto="home" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
+        <i class="fa-solid fa-chevron-left text-base"></i>
+      </button>
+      <h1 class="text-lg font-bold text-slate-800 tracking-tight text-center flex-1 pr-1">Riwayat Habit</h1>
+      <button aria-label="Pilih Tanggal" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
+        <i class="fa-regular fa-calendar text-base"></i>
+      </button>
+    </nav>
+
+    <main class="px-5 pt-1 pb-4 flex-1 flex flex-col">
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between mb-5 px-1">
+          <button id="cal-prev" aria-label="Bulan sebelumnya" class="p-2 -m-2 text-slate-600 hover:text-slate-900 active:scale-90 transition" type="button">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+          </button>
+          <span class="text-base font-bold text-slate-800" id="cal-title">—</span>
+          <button id="cal-next" aria-label="Bulan berikutnya" class="p-2 -m-2 text-slate-600 hover:text-slate-900 active:scale-90 transition" type="button">
+            <i class="fa-solid fa-chevron-right text-sm"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 text-center mb-3">
+          <span class="text-xs font-semibold text-slate-500">Sen</span>
+          <span class="text-xs font-semibold text-slate-500">Sel</span>
+          <span class="text-xs font-semibold text-slate-500">Rab</span>
+          <span class="text-xs font-semibold text-slate-500">Kam</span>
+          <span class="text-xs font-semibold text-slate-500">Jum</span>
+          <span class="text-xs font-semibold text-slate-500">Sab</span>
+          <span class="text-xs font-semibold text-slate-500">Min</span>
+        </div>
+
+        <div id="cal-days" class="grid grid-cols-7 gap-y-3.5 text-center items-center text-sm font-medium"></div>
+      </div>
+
+      <section id="achievement-card" class="hidden mt-4 bg-gradient-to-r from-[#eef6ff] via-[#f2f8fe] to-[#eff4fe] rounded-2xl p-4 flex items-center space-x-3.5 border border-blue-100/60 shadow-sm relative overflow-hidden">
+        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center filter drop-shadow-sm select-none">
+          <i class="twa twa-trophy text-3xl"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-[13px] leading-snug font-medium text-slate-700" id="achievement-text"></p>
+        </div>
+        <div class="opacity-80 select-none pr-1"><i class="twa twa-sparkles text-lg"></i></div>
+      </section>
+
+      <div id="stats-empty-hint" class="mt-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-clock-rotate-left text-base"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-slate-800">Belum ada riwayat</p>
+            <p class="text-[11px] text-slate-500">Selesaikan habit pertamamu untuk mulai mengisi kalender.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ==================== PAGE: CELEBRATION ==================== -->
+  <section id="page-celebrate" class="page hidden flex-1 flex-col relative overflow-hidden">
+    <div class="absolute inset-0 sky-gradient pointer-events-none z-0 overflow-hidden">
+      <div class="absolute -bottom-10 -left-12 w-64 h-64 rounded-full bg-white/70 blur-2xl"></div>
+      <div class="absolute -bottom-8 -right-12 w-72 h-72 rounded-full bg-white/80 blur-2xl"></div>
+      <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-80 h-48 bg-blue-100/50 rounded-full blur-3xl"></div>
+    </div>
+
+    <nav class="relative z-10 px-5 flex items-center justify-between pt-5 pb-3 flex-shrink-0">
+      <button id="celebrate-back" aria-label="Kembali" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-white/40 active:scale-95 transition-all" type="button">
+        <i class="fa-solid fa-chevron-left text-base text-blue-600"></i>
+      </button>
+      <h1 class="text-base font-bold text-slate-800 tracking-tight">Hari Ini</h1>
+      <button id="celebrate-calendar" aria-label="Kalender" class="w-10 h-10 rounded-full flex items-center justify-center text-blue-600 hover:bg-white/40 active:scale-95 transition-all" type="button">
+        <i class="fa-regular fa-calendar text-base"></i>
+      </button>
+    </nav>
+
+    <main class="relative z-10 flex-1 px-6 flex flex-col justify-between pt-4 pb-6">
+      <div class="flex flex-col items-center text-center">
+        <div class="relative mt-2 mb-6 flex items-center justify-center">
+          <div class="absolute -top-3 left-2 w-4 h-4 rounded-full bg-amber-300 twinkle"></div>
+          <div class="absolute -top-1 -right-3 w-5 h-5 rounded-full bg-sky-400 twinkle-delay"></div>
+          <div class="absolute left-[-22px] top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-sm rotate-45 opacity-80"></div>
+          <div class="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-amber-300 twinkle-delay"></div>
+          <div class="absolute -right-5 top-1/3 w-3 h-3 bg-sky-400 rounded-sm rotate-12 opacity-75"></div>
+          <div class="absolute -bottom-3 right-3 w-4 h-4 rounded-full bg-sky-500 twinkle"></div>
+
+          <div id="celebrate-circle" class="w-28 h-28 rounded-full bg-blue-500 flex items-center justify-center glow-circle border-4 border-white/60">
+            <i class="fa-solid fa-check text-white text-5xl"></i>
+          </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-slate-800 tracking-tight mb-1.5">Mantap!</h2>
+        <p id="celebrate-subtitle" class="text-sm font-medium text-slate-600 mb-4">Habit selesai!</p>
+
+        <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-100/70 border border-blue-200/60 text-xs font-semibold text-blue-700 shadow-sm">
+          <span id="celebrate-streak-text">Streak kamu sekarang: 0 hari</span>
+          <i class="twa twa-fire text-sm ml-1"></i>
+        </div>
+      </div>
+
+      <div id="celebrate-reminder-card" class="w-full my-auto pt-2">
+        <section class="bg-white/95 backdrop-blur-sm rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-blue-50/80">
+          <div class="flex items-center justify-center space-x-2 text-slate-700 mb-2.5">
+            <i class="twa twa-light-bulb text-xl"></i>
+            <span class="text-xs font-semibold tracking-wide text-slate-600" id="celebrate-reminder-title">Pengingat Selanjutnya:</span>
+          </div>
+          
+          <div id="celebrate-reminder-note" class="text-sm font-bold text-slate-800 text-left leading-relaxed px-3 mb-3 whitespace-pre-line max-h-[30vh] overflow-y-auto"></div>
+          
+          <div class="flex items-center justify-center text-xs font-medium text-slate-500 space-x-1">
+            <i class="fa-regular fa-clock"></i>
+            <span id="celebrate-countdown"></span>
+          </div>
+        </section>
+      </div>
+
+      <footer class="w-full flex flex-col items-center space-y-3 pb-2">
+        <button id="celebrate-ok-btn" class="w-full py-3.5 px-6 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition duration-150 text-white font-semibold text-sm shadow-md shadow-blue-500/25 tracking-wide" type="button">
+          Oke, Mengerti!
+        </button>
+      </footer>
+    </main>
+  </section>
+
+  <!-- ==================== PAGE: DETAIL HABIT ==================== -->
+  <section id="page-detail" class="page hidden flex-1 flex flex-col">
+    <nav class="px-5 py-3 flex items-center justify-between relative pt-4 flex-shrink-0">
+      <button aria-label="Kembali" data-goto="home" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:scale-95 transition" type="button">
+        <i class="fa-solid fa-chevron-left text-base"></i>
+      </button>
+      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Detail Habit</h1>
+      <div class="w-8"></div>
+    </nav>
+
+    <main class="flex-1 px-5 pt-2 pb-24 overflow-y-auto">
+      <div class="space-y-6">
+        <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3.5">
+          <div id="detail-icon" class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+            <i class="twa twa-sun text-3xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 id="detail-title" class="text-base font-bold text-slate-900 truncate">—</h2>
+            <p id="detail-subtitle" class="text-xs font-medium text-slate-400 mt-0.5">—</p>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-slate-900">Statistik</h3>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white rounded-2xl p-3 pt-3.5 pb-3 flex flex-col items-center justify-center shadow-sm border border-slate-100 text-center">
+              <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center mb-1.5">
+                <i class="twa twa-check-mark-button text-base"></i>
+              </div>
+              <span id="detail-done" class="text-base font-bold text-slate-900 leading-tight">0</span>
+              <span class="text-[11px] font-medium text-slate-400 mt-0.5">Selesai</span>
+            </div>
+            <div class="bg-white rounded-2xl p-3 pt-3.5 pb-3 flex flex-col items-center justify-center shadow-sm border border-slate-100 text-center">
+              <div class="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center mb-1.5">
+                <i class="twa twa-fire text-base"></i>
+              </div>
+              <span id="detail-streak" class="text-base font-bold text-slate-900 leading-tight">0</span>
+              <span class="text-[11px] font-medium text-slate-400 mt-0.5">Streak</span>
+            </div>
+            <div class="bg-white rounded-2xl p-3 pt-3.5 pb-3 flex flex-col items-center justify-center shadow-sm border border-slate-100 text-center">
+              <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mb-1.5">
+                <i class="fa-solid fa-chart-simple text-sm text-blue-500"></i>
+              </div>
+              <span id="detail-rate" class="text-base font-bold text-slate-900 leading-tight">0%</span>
+              <span class="text-[11px] font-medium text-slate-400 mt-0.5">Tingkat</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-slate-900">Catatan</h3>
+          </div>
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+              <i class="fa-regular fa-file-lines text-sm"></i>
+            </div>
+            <p id="detail-note" class="text-xs font-semibold text-slate-800 leading-snug">Belum ada catatan pengingat</p>
+          </div>
+        </section>
+      </div>
+
+      <footer class="pt-6">
+        <button id="detail-delete-btn" type="button"
+          class="w-full py-3.5 px-4 bg-red-50 hover:bg-red-100 active:bg-red-200 text-rose-500 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-trash-can text-sm"></i>
+          <span>Hapus Habit</span>
+        </button>
+      </footer>
+    </main>
+  </section>
+
+  <!-- ==================== PAGE: TAMBAH ==================== -->
+  <section id="page-add" class="page hidden flex-1 flex flex-col">
+    <nav class="px-5 py-3 flex items-center justify-between relative flex-shrink-0">
+      <button aria-label="Kembali" data-goto="home" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:bg-slate-200/60 transition-colors" type="button">
+        <i class="fa-solid fa-chevron-left text-base"></i>
+      </button>
+      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Tambah Habit</h1>
+      <div class="w-8"></div>
+    </nav>
+
+    <main class="flex-1 px-5 pb-32 pt-2">
+      <form id="add-habit-form" class="space-y-5" novalidate>
+        <section class="flex flex-col items-center justify-center pt-1 pb-2">
+          <button type="button" id="icon-preview" aria-label="Pilih ikon habit"
+            class="relative w-24 h-24 rounded-3xl bg-blue-50 border border-blue-200 flex items-center justify-center shadow-inner active:scale-95 transition-all">
+            <span class="absolute top-2 left-2.5 text-blue-300 font-medium text-lg leading-none select-none">+</span>
+            <span id="icon-preview-emoji"><i class="twa twa-books text-5xl"></i></span>
+          </button>
+          <button type="button" id="btn-change-icon"
+            class="mt-2.5 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold active:scale-95 transition-all">
+            Ganti Ikon
+          </button>
+        </section>
+
+        <div id="icon-picker" class="hidden bg-white rounded-2xl p-3 border border-slate-100 shadow-md">
+          <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2 px-1">Pilih Ikon</p>
+          <div id="emoji-tabs" class="flex gap-1.5 overflow-x-auto pb-2.5 mb-1"></div>
+          <div id="icon-picker-grid" class="grid grid-cols-6 gap-1.5 max-h-56 overflow-y-auto pr-0.5"></div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-name">Nama Habit</label>
+          <input class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+            id="habit-name" name="habit_name" placeholder="Contoh: Membaca buku" type="text" maxlength="60" required/>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <span class="block text-xs font-semibold text-slate-700 ml-0.5">Tipe Pengingat</span>
+          <div id="reminder-type-group" class="grid grid-cols-2 gap-2 bg-slate-200/70 p-1 rounded-2xl">
+            <button class="rt-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all" data-type="alarm" type="button">Setel Alarm</button>
+            <button class="rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-type="anytime" type="button">Tanpa Jam</button>
+          </div>
+        </div>
+
+        <div id="time-input-wrapper" class="space-y-1.5 pt-2">
+          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-time">Waktu Alarm</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-regular fa-clock text-sm"></i></span>
+            <input class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+              id="habit-time" name="habit_time" type="time" value="07:00"/>
+          </div>
+        </div>
+
+        <div class="pt-1 flex items-center justify-between">
+          <div class="pr-2">
+            <h2 class="text-xs font-semibold text-slate-800 leading-tight" id="reminder-label">Pengingat</h2>
+            <p class="text-[11px] text-slate-400 mt-0.5" id="reminder-desc">Dapatkan notifikasi pengingat</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input checked class="sr-only peer" id="reminder-switch" type="checkbox"/>
+            <div class="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="reminder-note">
+            Catatan Pengingat <span class="text-slate-400 font-normal">(Opsional)</span>
+          </label>
+          <textarea class="w-full p-3.5 rounded-2xl bg-white border border-slate-200/80 text-xs leading-relaxed text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm resize-none"
+            id="reminder-note" rows="3" maxlength="200"
+            placeholder="Tulis pesan pengingat saat alarm berbunyi..."></textarea>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <span class="block text-xs font-semibold text-slate-700 ml-0.5">Frekuensi</span>
+          <div id="frequency-group" class="grid grid-cols-3 gap-2 bg-slate-200/70 p-1 rounded-2xl">
+            <button class="freq-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all" data-freq="daily" type="button">Setiap Hari</button>
+            <button class="freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-freq="workday" type="button">Hari Kerja</button>
+            <button class="freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-freq="custom" type="button">Kustom</button>
+          </div>
+
+          <div id="custom-days-panel" class="hidden mt-2.5 bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-2 px-0.5">
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Pilih Hari</p>
+              <p id="custom-days-hint" class="text-[10px] font-semibold text-blue-600">7 hari dipilih</p>
+            </div>
+            <div id="day-picker" class="grid grid-cols-7 gap-1.5"></div>
+            <div class="flex items-center justify-between mt-2.5 px-0.5">
+              <button id="day-select-all" type="button" class="text-[10px] font-bold text-blue-600 active:scale-95 transition">Pilih Semua</button>
+              <button id="day-select-workday" type="button" class="text-[10px] font-bold text-slate-500 active:scale-95 transition">Sen–Jum</button>
+              <button id="day-clear-all" type="button" class="text-[10px] font-bold text-slate-400 active:scale-95 transition">Kosongkan</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <div id="floating-save-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[420px] px-5 z-30">
+      <button form="add-habit-form" type="submit"
+        class="w-full py-4 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-sm tracking-wide shadow-lg shadow-blue-600/30 transition-all">
+        Simpan
+      </button>
+    </div>
+  </section>
+
+  <!-- ==================== PAGE: PROFIL ==================== -->
+  <section id="page-profile" class="page hidden flex-1 flex flex-col">
+    <div class="px-5 py-3 flex items-center justify-between pt-4">
+      <button aria-label="Kembali" data-goto="home" class="w-9 h-9 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-700 active:scale-95 transition-transform">
+        <i class="fa-solid fa-chevron-left text-sm"></i>
+      </button>
+      <h1 class="text-lg font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Pengaturan</h1>
+      <div class="w-9"></div>
+    </div>
+
+    <div class="flex-1 px-4 space-y-4 pt-1">
+      <section id="profile-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer active:bg-slate-50/70 transition-colors">
+        <div class="flex items-center space-x-3.5">
+          <div class="relative">
+            <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-blue-500/20 bg-blue-100 flex items-center justify-center text-blue-500" id="profile-avatar">
+              <i class="fa-solid fa-user text-xl"></i>
+            </div>
+            <div class="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1 border-2 border-white text-white">
+              <i class="fa-solid fa-pen text-[8px]"></i>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800" id="profile-name">Pengguna</h2>
+            <div class="flex items-center text-xs font-semibold px-2 py-0.5 rounded-full mt-1 border w-fit" id="profile-tier-badge">
+              <span class="mr-1" id="profile-tier-emoji"><i class="twa twa-sparkles"></i></span>
+              <span id="profile-tier-text">Pengguna Baru</span>
+            </div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-sm text-slate-400"></i>
+      </section>
+
+      <section id="pro-pass-card" class="hidden bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-md shadow-blue-500/20 relative overflow-hidden">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs uppercase tracking-wider font-extrabold bg-white/20 px-2 py-0.5 rounded text-white">PRO PASS</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Aktif
+              </span>
+            </div>
+            <p class="text-xs text-blue-100 font-medium" id="pro-pass-expiry">Aktif</p>
+          </div>
+          <button id="pro-manage-btn" class="bg-white text-blue-600 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition-transform">Kelola</button>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-2 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+            <i class="twa twa-fire text-xl"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-slate-800"><span id="profile-streak">0</span> Hari</div>
+            <div class="text-[11px] text-slate-400 font-medium leading-none">Streak Aktif</div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+            <i class="twa twa-trophy text-xl"></i>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-slate-800"><span id="profile-total">0</span> Total</div>
+            <div class="text-[11px] text-slate-400 font-medium leading-none">Habit Selesai</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AKUN & CLOUD ===== -->
+      <section class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-3.5 flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-cloud text-xs"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-800 truncate" id="auth-title">Belum masuk</p>
+            <p class="text-[11px] text-slate-400 truncate" id="auth-subtitle">Login untuk sinkronisasi cloud</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="space-y-2 pt-1">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">PREFERENSI APLIKASI</h3>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-100 overflow-hidden">
+          <div class="p-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-moon text-xs"></i></div>
+              <div>
+                <p class="text-sm font-medium text-slate-800">Mode Gelap</p>
+                <p class="text-[11px] text-slate-400">Tema gelap untuk mata</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="toggle-dark" class="sr-only peer" type="checkbox"/>
+              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div id="row-notif" class="p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50/70 transition-colors">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center"><i class="fa-solid fa-bell text-xs"></i></div>
+              <div>
+                <p class="text-sm font-medium text-slate-800">Notifikasi</p>
+                <p class="text-[11px] text-slate-400">Jadwal pengingat harian</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-xs text-slate-400 font-semibold" id="notif-status">Nonaktif</span>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+            </div>
+          </div>
+          <div class="p-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-500 flex items-center justify-center"><i class="fa-solid fa-volume-high text-xs"></i></div>
+              <div>
+                <p class="text-sm font-medium text-slate-800">Suara Notifikasi</p>
+                <p class="text-[11px] text-slate-400">Lonceng lembut saat habit tiba</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="toggle-sound" class="sr-only peer" type="checkbox"/>
+              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div id="row-about" class="p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50/70 transition-colors">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-circle-info text-xs"></i></div>
+              <div>
+                <p class="text-sm font-medium text-slate-800">Tentang Aplikasi</p>
+                <p class="text-[11px] text-slate-400">Ketentuan &amp; rilis MyHabits</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-xs text-slate-400 font-medium">v1.0.0</span>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pt-2 pb-6 space-y-2">
+        <button id="login-btn" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold py-3 rounded-2xl flex items-center justify-center space-x-2 transition-colors border border-blue-200/50 active:scale-[0.98]">
+          <i class="fa-solid fa-right-to-bracket text-sm"></i>
+          <span class="text-sm">Masuk / Daftar</span>
+        </button>
+        <button id="logout-btn" class="hidden w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 rounded-2xl flex items-center justify-center space-x-2 transition-colors border border-red-200/50 active:scale-[0.98]">
+          <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+          <span class="text-sm">Keluar dari Akun</span>
+        </button>
+      </section>
+    </div>
+  </section>
+
+  <!-- ==================== NAV ==================== -->
+  <nav id="bottom-nav" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[88%] max-w-[340px] glass-pill rounded-full px-3 py-2 flex justify-between items-center shadow-2xl z-50 border border-white/20" aria-label="Main Navigation"></nav>
+
+</main>
+
+<!-- ==================== MODAL ROOT ==================== -->
+<div id="modal-root" class="fixed inset-0 z-[200] hidden">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" data-modal-close></div>
+  <div class="absolute left-1/2 bottom-0 -translate-x-1/2 w-full max-w-[420px] px-4 pb-6 pt-4">
+    <div id="modal-body" class="bg-white rounded-3xl p-5 shadow-2xl"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* =====================================================
+     FIREBASE INIT
+     ===================================================== */
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5Nxa_hlRfa4vXkmK4ZsXKSSYmsDj3lrw",
+    authDomain: "myawesomeproject-50c99.firebaseapp.com",
+    projectId: "myawesomeproject-50c99",
+    storageBucket: "myawesomeproject-50c99.firebasestorage.app",
+    messagingSenderId: "956999161866",
+    appId: "1:956999161866:web:6761cadd746925373b27f3",
+    measurementId: "G-TRRX599DTW"
+  };
+
+  let auth = null;
+  let db = null;
+  let firebaseReady = false;
+
+  try {
+    if (typeof firebase !== "undefined" && firebase.initializeApp) {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      firebaseReady = true;
+    }
+  } catch (err) {
+    console.warn("Firebase init gagal:", err);
+  }
+
+  /* =====================================================
+     STATE
+     ===================================================== */
+  const STORAGE_KEY = 'myhabits_v1';
+
+  const state = {
+    user: {
+      name: "", status: "Member", isPro: false, isVip: false, avatar: null,
+      headerBg: null, /* Tambahan untuk background header */
+      tier: "Pengguna Baru", proExpiry: "", unreadNotif: 0,
+      notifEnabled: false, soundEnabled: false, darkMode: false
+    },
+    stats: { streak: 0, totalDone: 0 },
+    habits: [],
+    history: {}
+  };
+
+  const esc = (s="") => String(s).replace(/[&<>"']/g, c => (
+    { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]
+  ));
+
+  const navEl   = document.getElementById("bottom-nav");
+  const groupEl = document.getElementById("habit-checklist-group");
+  const emptyEl = document.getElementById("habit-empty-state");
+  const noneTodayEl = document.getElementById("habit-none-today");
+
+  /* =====================================================
+     CLOUD SYNC
+     ===================================================== */
+  let currentUser = null;
+  let currentUid  = null;
+  let cloudSaveTimer = null;
+  let cloudBusy = false;
+
+  function scheduleCloudSave() {
+    if (!firebaseReady || !currentUser) return;
+    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(pushToCloud, 800);
+  }
+
+  async function pushToCloud() {
+    if (!firebaseReady || !currentUser) return;
+    if (cloudBusy) { scheduleCloudSave(); return; }
+    cloudBusy = true;
+    try {
+      await db.collection("users").doc(currentUser.uid).set({
+        habits: state.habits,
+        history: state.history,
+        profile: {
+          name: state.user.name,
+          isPro: state.user.isPro,
+          isVip: state.user.isVip,
+          tier: state.user.tier,
+          proExpiry: state.user.proExpiry,
+          darkMode: state.user.darkMode,
+          notifEnabled: state.user.notifEnabled,
+          soundEnabled: state.user.soundEnabled,
+          headerBg: state.user.headerBg /* Sinkronisasi background header */
+        },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (err) {
+      console.warn("Cloud save gagal:", err);
+    } finally {
+      cloudBusy = false;
+    }
+  }
+
+  async function pullFromCloud(uid) {
+    if (!firebaseReady) return false;
+    try {
+      const doc = await db.collection("users").doc(uid).get();
+      if (!doc.exists) return false;
+      const data = doc.data() || {};
+      if (Array.isArray(data.habits)) state.habits = data.habits;
+      if (data.history && typeof data.history === "object") state.history = data.history;
+      if (data.profile && typeof data.profile === "object") {
+        const p = data.profile;
+        if (typeof p.name === "string") state.user.name = p.name;
+        state.user.isPro      = !!p.isPro;
+        state.user.isVip      = !!p.isVip;
+        state.user.tier       = p.tier || state.user.tier;
+        state.user.proExpiry  = p.proExpiry || "";
+        state.user.darkMode   = !!p.darkMode;
+        state.user.notifEnabled = !!p.notifEnabled;
+        state.user.soundEnabled = !!p.soundEnabled;
+        state.user.headerBg   = p.headerBg || null; /* Ambil background dari cloud */
+      }
+      recomputeGlobalStats();
+      saveLocalOnly();
+      return true;
+    } catch (err) {
+      console.warn("Cloud pull gagal:", err);
+      return false;
+    }
+  }
+
+  /* =====================================================
+     PERSISTENCE
+     ===================================================== */
+  function saveLocalOnly() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+  function save() {
+    saveLocalOnly();
+    scheduleCloudSave();
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== "object") return;
+      if (d.user) Object.assign(state.user, d.user);
+      if (d.stats) Object.assign(state.stats, d.stats);
+      state.habits = Array.isArray(d.habits) ? d.habits : [];
+      state.history = (d.history && typeof d.history === "object") ? d.history : {};
+    } catch (_) {}
+  }
+
+  /* =====================================================
+     AUDIO BEEP
+     ===================================================== */
+  let audioCtx = null;
+  function playBeep() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = audioCtx || new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, t0);
+      osc.frequency.setValueAtTime(1180, t0 + 0.16);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0 + 0.6);
+    } catch (_) {}
+  }
+
+  /* =====================================================
+     MODAL
+     ===================================================== */
+  const modalRoot = document.getElementById("modal-root");
+  const modalBody = document.getElementById("modal-body");
+
+  function openModal(html) {
+    modalBody.innerHTML = html;
+    modalRoot.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+  function closeModal() {
+    modalRoot.classList.add("hidden");
+    modalBody.innerHTML = "";
+    document.body.classList.remove("modal-open");
+  }
+  modalRoot.addEventListener("click", (e) => {
+    if (e.target.closest("[data-modal-close]")) closeModal();
+  });
+
+  /* =====================================================
+     DATE HELPERS
+     ===================================================== */
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function dateKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+  const ALL_DAYS = [0,1,2,3,4,5,6];
+  const WORK_DAYS = [1,2,3,4,5];
+  const DAY_ORDER = [1,2,3,4,5,6,0];
+  const DAYS = [
+    { v: 1, short: 'Sen', full: 'Senin'  },
+    { v: 2, short: 'Sel', full: 'Selasa' },
+    { v: 3, short: 'Rab', full: 'Rabu'   },
+    { v: 4, short: 'Kam', full: 'Kamis'  },
+    { v: 5, short: 'Jum', full: 'Jumat'  },
+    { v: 6, short: 'Sab', full: 'Sabtu'  },
+    { v: 0, short: 'Min', full: 'Minggu' }
+  ];
+
+  function getHabitDays(habit) {
+    return (Array.isArray(habit.days) && habit.days.length) ? habit.days : ALL_DAYS;
+  }
+  function isHabitDay(habit, date) {
+    return getHabitDays(habit).includes(date.getDay());
+  }
+  function isHabitToday(habit) {
+    return isHabitDay(habit, new Date());
+  }
+
+  /* =====================================================
+     STATS
+     ===================================================== */
+  function computeStreak(history) {
+    if (!history) return 0;
+    const keys = Object.keys(history).filter(k => history[k] > 0);
+    if (keys.length === 0) return 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayKey = dateKey(today);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = dateKey(yesterday);
+    if (!history[todayKey] && !history[yesterdayKey]) return 0;
+    let cursor = history[todayKey] ? new Date(today) : new Date(yesterday);
+    let streak = 0;
+    while (history[dateKey(cursor)]) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    return streak;
+  }
+
+  function computeCompletionRate(habit) {
+    const hh = habit.history || {};
+    const daysDone = Object.keys(hh).filter(k => hh[k] > 0).length;
+    if (daysDone === 0) return 0;
+    const createdAt = habit.createdAt ? new Date(habit.createdAt) : new Date();
+    createdAt.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const totalDays = Math.max(1, Math.floor((today - createdAt) / 86400000) + 1);
+    return Math.min(100, Math.round((daysDone / totalDays) * 100));
+  }
+
+  function recomputeGlobalStats() {
+    let totalDone = 0, maxStreak = 0;
+    const history = {};
+    state.habits.forEach(h => {
+      const hh = h.history || {};
+      Object.entries(hh).forEach(([k, v]) => {
+        if (v > 0) { totalDone++; history[k] = (history[k] || 0) + 1; }
+      });
+      maxStreak = Math.max(maxStreak, computeStreak(hh));
+    });
+    state.stats.totalDone = totalDone;
+    state.stats.streak = maxStreak;
+    state.history = history;
+  }
+
+  function computeCountdown(habit) {
+    if (!habit.time) return "Bisa dilakukan kapan saja";
+    const parts = String(habit.time).split(":");
+    if (parts.length < 2) return "Besok lagi ya";
+    const hh = Number(parts[0]); const mm = Number(parts[1]);
+    if (isNaN(hh) || isNaN(mm)) return "Besok lagi ya";
+    const now = new Date();
+    const next = new Date(); next.setHours(hh, mm, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    let guard = 0;
+    while (!isHabitDay(habit, next) && guard < 14) { next.setDate(next.getDate() + 1); guard++; }
+    const diffMs = next - now;
+    const totalMin = Math.max(0, Math.floor(diffMs / 60000));
+    const days = Math.floor(totalMin / (60 * 24));
+    const hours = Math.floor((totalMin % (60 * 24)) / 60);
+    const mins = totalMin % 60;
+    if (days >= 1) {
+      if (days === 1) return `Besok, ${habit.time}`;
+      return `${days} hari lagi (${habit.time})`;
+    }
+    if (hours >= 1) { if (mins === 0) return `${hours} jam lagi`; return `${hours} jam ${mins} menit lagi`; }
+    if (mins < 1) return "Sebentar lagi";
+    return `${mins} menit lagi`;
+  }
+
+  /* =====================================================
+     HOME RENDER
+     ===================================================== */
+  function habitIconHTML(h, size) {
+    const cls = size === "lg" ? "text-3xl" : "text-2xl";
+    if (h.twa) return `<i class="twa ${h.twa} ${cls}"></i>`;
+    if (h.emoji && h.emoji.startsWith('twa-')) return `<i class="twa ${h.emoji} ${cls}"></i>`;
+    if (h.emoji) return `<span class="${cls} leading-none">${esc(h.emoji)}</span>`;
+    return `<i class="twa twa-check-mark-button ${cls}"></i>`;
+  }
+
+  function habitCardHTML(h) {
+    const checked = !!h.done;
+    return `
+    <article class="habit-item bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100 transition-all cursor-pointer"
+             data-id="${esc(h.id)}" data-checked="${checked}">
+      <div class="flex items-center space-x-3.5 min-w-0">
+        <div class="w-11 h-11 rounded-xl ${esc(h.bg || 'bg-slate-100')} flex items-center justify-center flex-shrink-0">
+          ${habitIconHTML(h)}
+        </div>
+        <div class="min-w-0">
+          <h4 class="text-sm font-bold ${checked ? 'text-slate-400 line-through' : 'text-slate-800'} truncate">${esc(h.title)}</h4>
+          <div class="flex items-center text-xs text-slate-400 font-medium space-x-1 mt-0.5 min-w-0">
+            <i class="fa-solid ${checked ? 'fa-check text-blue-500' : 'fa-check text-slate-300'} text-[10px] flex-shrink-0"></i>
+            <span class="truncate">${esc(h.subtitle || '')}</span>
+          </div>
+        </div>
+      </div>
+      <button aria-label="Toggle habit"
+              class="habit-toggle-btn w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                checked
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : 'bg-white border-2 border-slate-200 text-transparent hover:border-blue-400'
+              }" type="button">
+        <i class="fa-solid fa-check text-xs font-bold"></i>
+      </button>
+    </article>`;
+  }
+
+  function renderHome() {
+    const { habits, stats, user } = state;
+    document.getElementById("user-name").textContent   = user.name || "Pengguna";
+    document.getElementById("user-status").textContent = user.status || "Member";
+    document.getElementById("pro-badge").classList.toggle("hidden", !user.isPro);
+    document.getElementById("vip-badge").classList.toggle("hidden", !user.isVip);
+    document.getElementById("notif-dot").classList.toggle("hidden", !user.unreadNotif);
+
+    const av = document.getElementById("banner-avatar");
+    av.innerHTML = user.avatar
+      ? `<img src="${esc(user.avatar)}" class="w-full h-full object-cover object-top" alt="Foto profil">`
+      : `<i class="fa-solid fa-user text-2xl"></i>`;
+
+    // Render Background Header
+    const headerEl = document.getElementById("home-header");
+    const overlayEl = document.getElementById("header-overlay");
+    if (user.headerBg) {
+      headerEl.style.backgroundImage = `url('${user.headerBg}')`;
+      headerEl.classList.add("header-custom-bg");
+      overlayEl.classList.remove("hidden"); // Munculkan overlay gelap
+    } else {
+      headerEl.style.backgroundImage = "none";
+      headerEl.classList.remove("header-custom-bg");
+      overlayEl.classList.add("hidden"); // Sembunyikan overlay
+    }
+
+    document.getElementById("stat-streak").textContent = stats.streak;
+    document.getElementById("stat-total").textContent  = stats.totalDone;
+
+    const todayHabits = habits.filter(isHabitToday);
+    document.getElementById("habit-total").textContent = todayHabits.length + " Total";
+    groupEl.innerHTML = todayHabits.map(habitCardHTML).join("");
+
+    emptyEl.classList.toggle("hidden", habits.length > 0);
+    noneTodayEl.classList.toggle("hidden", !(habits.length > 0 && todayHabits.length === 0));
+  }
+
+  /* =====================================================
+     CELEBRATE
+     ===================================================== */
+  let celebratedHabitId = null;
+  function renderCelebrate() {
+    const habit = state.habits.find(h => String(h.id) === String(celebratedHabitId));
+    if (!habit) { showPage("home"); return; }
+    
+    document.getElementById("celebrate-subtitle").textContent = `${habit.title} sudah selesai!`;
+    const streak = computeStreak(habit.history || {});
+    document.getElementById("celebrate-streak-text").textContent = `Streak kamu sekarang: ${streak} hari`;
+    
+    const reminderCard = document.getElementById("celebrate-reminder-card");
+    const hasNote = habit.note && habit.note.trim().length > 0;
+    const countdownEl = document.getElementById("celebrate-countdown");
+    const timeIcon = countdownEl.previousElementSibling;
+    const titleEl = document.getElementById("celebrate-reminder-title");
+
+    if (habit.reminder && hasNote) {
+      reminderCard.classList.remove("hidden");
+      titleEl.textContent = habit.time ? "Pengingat Selanjutnya:" : "Catatan Pengingat:";
+      document.getElementById("celebrate-reminder-note").textContent = habit.note.trim();
+      
+      if (habit.time) {
+        countdownEl.textContent = computeCountdown(habit);
+        timeIcon.style.display = 'inline-block';
+        timeIcon.className = 'fa-regular fa-clock';
+      } else {
+        countdownEl.textContent = "Bisa dilakukan kapan saja";
+        timeIcon.style.display = 'none';
+      }
+    } else if (habit.reminder && habit.time) {
+      reminderCard.classList.remove("hidden");
+      titleEl.textContent = "Pengingat Selanjutnya:";
+      document.getElementById("celebrate-reminder-note").textContent = `Jangan lupa ${habit.title} lagi ya!`;
+      countdownEl.textContent = computeCountdown(habit);
+      timeIcon.style.display = 'inline-block';
+      timeIcon.className = 'fa-regular fa-clock';
+    } else if (habit.reminder && !habit.time) {
+      reminderCard.classList.remove("hidden");
+      titleEl.textContent = "Pengingat:";
+      document.getElementById("celebrate-reminder-note").textContent = `Jangan lupa ${habit.title} lagi ya!`;
+      countdownEl.textContent = "Bisa dilakukan kapan saja";
+      timeIcon.style.display = 'none';
+    } else {
+      reminderCard.classList.add("hidden");
+    }
+
+    const circle = document.getElementById("celebrate-circle");
+    circle.style.animation = "none"; void circle.offsetWidth; circle.style.animation = "";
+  }
+
+  /* =====================================================
+     PROFILE
+     ===================================================== */
+  function renderProfile() {
+    const { user, stats } = state;
+    document.getElementById("profile-name").textContent = user.name || "Pengguna";
+
+    const badge = document.getElementById("profile-tier-badge");
+    const emoji = document.getElementById("profile-tier-emoji");
+    const text  = document.getElementById("profile-tier-text");
+    if (user.isPro) {
+      emoji.innerHTML = '<i class="twa twa-crown"></i>';
+      text.textContent  = "Pengguna Premium";
+      badge.className   = "flex items-center text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-1 border border-amber-200/60 w-fit";
+    } else {
+      emoji.innerHTML = '<i class="twa twa-sparkles"></i>';
+      text.textContent  = user.tier || "Pengguna Baru";
+      badge.className   = "flex items-center text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full mt-1 border border-slate-200 w-fit";
+    }
+
+    const av = document.getElementById("profile-avatar");
+    av.innerHTML = user.avatar
+      ? `<img src="${esc(user.avatar)}" class="w-full h-full object-cover" alt="Foto profil">`
+      : `<i class="fa-solid fa-user text-xl"></i>`;
+
+    document.getElementById("pro-pass-card").classList.toggle("hidden", !user.isPro);
+    if (user.isPro && user.proExpiry) {
+      document.getElementById("pro-pass-expiry").textContent = "Aktif hingga " + user.proExpiry;
+    }
+
+    document.getElementById("profile-streak").textContent = stats.streak;
+    document.getElementById("profile-total").textContent  = stats.totalDone;
+    document.getElementById("toggle-dark").checked  = !!user.darkMode;
+    document.getElementById("toggle-sound").checked = !!user.soundEnabled;
+
+    const st = document.getElementById("notif-status");
+    if (user.notifEnabled) {
+      st.textContent = "Aktif";
+      st.className = "text-xs font-semibold text-emerald-500";
+    } else if ("Notification" in window && Notification.permission === "denied") {
+      st.textContent = "Diblokir";
+      st.className = "text-xs font-semibold text-rose-400";
+    } else {
+      st.textContent = "Nonaktif";
+      st.className = "text-xs font-semibold text-slate-400";
+    }
+  }
+
+  /* =====================================================
+     DETAIL
+     ===================================================== */
+  let currentDetailId = null;
+  function openDetail(id) {
+    const habit = state.habits.find(h => String(h.id) === String(id));
+    if (!habit) return;
+    currentDetailId = habit.id;
+    showPage("detail");
+  }
+  function renderDetail() {
+    const habit = state.habits.find(h => String(h.id) === String(currentDetailId));
+    if (!habit) { showPage("home"); return; }
+    const iconEl = document.getElementById("detail-icon");
+    iconEl.className = `w-14 h-14 rounded-2xl ${habit.bg || 'bg-slate-100'} flex items-center justify-center shrink-0`;
+    iconEl.innerHTML = habitIconHTML(habit, "lg");
+    document.getElementById("detail-title").textContent = habit.title || "—";
+    document.getElementById("detail-subtitle").textContent = habit.subtitle || "";
+    const hh = habit.history || {};
+    const doneCount = Object.keys(hh).filter(k => hh[k] > 0).length;
+    const streak = computeStreak(hh);
+    const rate = computeCompletionRate(habit);
+    document.getElementById("detail-done").textContent = doneCount;
+    document.getElementById("detail-streak").textContent = streak;
+    document.getElementById("detail-rate").textContent = rate + "%";
+    document.getElementById("detail-note").textContent = (habit.note && habit.note.trim()) || "Belum ada catatan pengingat";
+  }
+
+  /* =====================================================
+     STATS / RIWAYAT
+     ===================================================== */
+  const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const calState = { year: new Date().getFullYear(), month: new Date().getMonth() };
+
+  function renderCalendar() {
+    const { year, month } = calState;
+    document.getElementById("cal-title").textContent = `${MONTHS[month]} ${year}`;
+    const firstDayJS = new Date(year, month, 1).getDay();
+    const startOffset = (firstDayJS + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+    const todayDate = today.getDate();
+    let cells = "";
+    for (let i = 0; i < startOffset; i++) cells += `<div class="h-9"></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${pad2(month+1)}-${pad2(d)}`;
+      const doneCount = state.history[dateStr] || 0;
+      const isToday = isCurrentMonth && d === todayDate;
+      if (doneCount > 0) {
+        cells += `
+          <div class="cal-day flex flex-col items-center justify-center h-9">
+            <span class="text-[11px] font-semibold text-slate-400 mb-0.5 leading-none">${d}</span>
+            <span class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-sm">
+              <i class="fa-solid fa-check text-[9px]"></i>
+            </span>
+          </div>`;
+      } else if (isToday) {
+        cells += `
+          <div class="cal-day flex flex-col items-center justify-center h-9">
+            <span class="text-xs font-bold text-blue-600 leading-none">${d}</span>
+            <span class="w-1 h-1 rounded-full bg-blue-500 mt-1"></span>
+          </div>`;
+      } else {
+        cells += `
+          <div class="cal-day flex flex-col items-center justify-center h-9">
+            <span class="text-xs font-semibold text-slate-700">${d}</span>
+          </div>`;
+      }
+    }
+    document.getElementById("cal-days").innerHTML = cells;
+
+    const ach = document.getElementById("achievement-card");
+    const streak = state.stats.streak;
+    if (streak > 0) {
+      ach.classList.remove("hidden");
+      document.getElementById("achievement-text").innerHTML =
+        `Kamu sudah konsisten selama <span class="font-bold text-slate-900">${streak} hari!</span>`;
+    } else { ach.classList.add("hidden"); }
+
+    const hasHistory = Object.values(state.history).some(v => v > 0);
+    document.getElementById("stats-empty-hint").classList.toggle("hidden", hasHistory);
+  }
+
+  function renderStats() { renderCalendar(); }
+
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    calState.month--;
+    if (calState.month < 0) { calState.month = 11; calState.year--; }
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    calState.month++;
+    if (calState.month > 11) { calState.month = 0; calState.year++; }
+    renderCalendar();
+  });
+
+  /* =====================================================
+     NAV
+     ===================================================== */
+  const NAV_ITEMS = [
+    { page: "home",    icon: "fa-house",        kind: "fa-solid",   label: "Beranda"   },
+    { page: "stats",   icon: "fa-chart-simple", kind: "fa-solid",   label: "Statistik" },
+    { page: "add",     icon: "fa-plus",         kind: "fa-solid",   label: "Tambah"    },
+    { page: "profile", icon: "fa-user",         kind: "fa-regular", label: "Profil"    }
+  ];
+
+  function renderNav(active) {
+    navEl.innerHTML = NAV_ITEMS.map(it => {
+      const isActive = it.page === active;
+      if (isActive) {
+        return `<button type="button" data-page="${it.page}" aria-current="page" aria-label="${it.label}"
+                  class="nav-pill-active flex items-center space-x-2 bg-[#2b2f38] text-white px-3.5 py-2 rounded-full shadow-inner">
+          <i class="${it.kind} ${it.icon} text-sm"></i>
+          <span class="text-xs font-bold">${it.label}</span>
+        </button>`;
+      }
+      return `<button type="button" data-page="${it.page}" aria-label="${it.label}"
+                class="nav-icon-inactive w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:text-white transition-colors active:scale-90">
+        <i class="${it.kind} ${it.icon} text-sm"></i>
+      </button>`;
+    }).join("");
+  }
+
+  /* =====================================================
+     ROUTER
+     ===================================================== */
+  const VALID = ["home", "stats", "add", "profile", "detail", "celebrate"];
+  let currentPage = "home";
+
+  function showPage(name) {
+    if (!VALID.includes(name)) name = "home";
+    currentPage = name;
+    document.querySelectorAll(".page").forEach(p => {
+      p.classList.toggle("hidden", p.id !== "page-" + name);
+    });
+    const hideNav = (name === "add" || name === "detail" || name === "celebrate");
+    document.body.classList.toggle("hide-nav", hideNav);
+    renderNav(name === "detail" || name === "celebrate" ? "home" : name);
+    if (name === "home")      renderHome();
+    if (name === "profile")   renderProfile();
+    if (name === "stats")     renderStats();
+    if (name === "detail")    renderDetail();
+    if (name === "celebrate") renderCelebrate();
+    try { history.replaceState(null, "", "#" + name); } catch (_) {}
+    window.scrollTo(0, 0);
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) active.blur();
+  }
+
+  function isTypingTarget(el) {
+    return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+  }
+  document.addEventListener("focusin", (e) => {
+    if (isTypingTarget(e.target)) document.body.classList.add("typing");
+  });
+  document.addEventListener("focusout", (e) => {
+    if (!isTypingTarget(e.target)) return;
+    setTimeout(() => {
+      if (!isTypingTarget(document.activeElement)) document.body.classList.remove("typing");
+    }, 120);
+  });
+
+  /* =====================================================
+     NOTIFIKASI
+     ===================================================== */
+  let reminderTimer = null;
+  const firedKeys = new Set();
+
+  function notifyHabit(h) {
+    const body = (h.note && h.note.trim()) ? h.note.trim() : `Waktunya ${h.title}!`;
+    try { new Notification("MyHabits", { body, tag: "habit-" + h.id }); } catch (_) {}
+    if (state.user.soundEnabled) playBeep();
+  }
+
+  function checkReminders() {
+    if (!state.user.notifEnabled) return;
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const now = new Date();
+    const todayK = dateKey(now);
+    const hhmm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+    state.habits.forEach(h => {
+      if (!h.reminder || h.done) return;
+      if (!isHabitToday(h)) return;
+      if (!h.time) return;
+      if ((h.time || "") !== hhmm) return;
+      const key = todayK + "|" + h.id;
+      if (firedKeys.has(key)) return;
+      firedKeys.add(key);
+      notifyHabit(h);
+    });
+  }
+
+  function startReminderLoop() {
+    if (reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = null;
+    if (!state.user.notifEnabled) return;
+    reminderTimer = setInterval(checkReminders, 25000);
+    checkReminders();
+  }
+
+  async function toggleNotif() {
+    if (state.user.notifEnabled) {
+      state.user.notifEnabled = false;
+      save(); renderProfile(); startReminderLoop();
+      showToast("Notifikasi dimatikan");
+      return;
+    }
+    if (!("Notification" in window)) { showToast("Browser tidak mendukung notifikasi"); return; }
+    let perm = Notification.permission;
+    if (perm === "default") {
+      try { perm = await Notification.requestPermission(); } catch (_) {}
+    }
+    if (perm !== "granted") { showToast("Izin notifikasi ditolak"); renderProfile(); return; }
+    state.user.notifEnabled = true;
+    save(); renderProfile(); startReminderLoop();
+    showToast("Notifikasi diaktifkan");
+    setTimeout(() => {
+      try { new Notification("MyHabits", { body: "Notifikasi aktif! Kami akan mengingatkanmu sesuai jadwal habit." }); } catch (_) {}
+      if (state.user.soundEnabled) playBeep();
+    }, 500);
+  }
+
+  /* =====================================================
+     DARK MODE
+     ===================================================== */
+  function applyDark(on) {
+    document.documentElement.classList.toggle("dark", !!on);
+    state.user.darkMode = !!on;
+    const el = document.getElementById("toggle-dark");
+    if (el) el.checked = !!on;
+    saveLocalOnly();
+  }
+
+  /* =====================================================
+     AUTH UI
+     ===================================================== */
+  function updateAuthUI(user) {
+    const title = document.getElementById("auth-title");
+    const subtitle = document.getElementById("auth-subtitle");
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    if (!title) return;
+    if (user) {
+      title.textContent = user.displayName || user.email || "Pengguna";
+      subtitle.textContent = user.email || "Tersinkronisasi ke cloud ☁️";
+      loginBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+    } else {
+      title.textContent = "Belum masuk";
+      subtitle.textContent = firebaseReady ? "Login untuk sinkronisasi cloud" : "Firebase belum tersambung";
+      loginBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+    }
+  }
+
+  /* =====================================================
+     AUTH MODAL (EMAIL / PASSWORD)
+     ===================================================== */
+  let authMode = "login"; 
+
+  function openAuthModal(mode) {
+    authMode = mode || "login";
+    renderAuthModal();
+  }
+
+  function renderAuthModal() {
+    const isLogin = authMode === "login";
+    openModal(`
+      <div class="flex flex-col items-center mb-4">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2">
+          <i class="fa-solid fa-${isLogin ? 'right-to-bracket' : 'user-plus'} text-xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">${isLogin ? 'Masuk ke Akun' : 'Buat Akun Baru'}</h3>
+        <p class="text-[11px] text-slate-500 mt-1 text-center">
+          ${isLogin ? 'Masuk untuk menyinkronkan habit ke cloud' : 'Daftar untuk mulai sinkronisasi habit'}
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Email</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-regular fa-envelope text-sm"></i></span>
+            <input id="auth-email" type="email" inputmode="email" autocomplete="email"
+              placeholder="nama@email.com"
+              class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Password</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-solid fa-lock text-sm"></i></span>
+            <input id="auth-password" type="password" autocomplete="${isLogin ? 'current-password' : 'new-password'}"
+              placeholder="Minimal 6 karakter"
+              class="w-full h-12 pl-11 pr-11 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
+            <button type="button" id="toggle-pass" aria-label="Tampilkan password"
+              class="absolute right-3 w-8 h-8 flex items-center justify-center text-slate-400 active:scale-90 transition">
+              <i class="fa-regular fa-eye text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        ${!isLogin ? `
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Konfirmasi Password</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-solid fa-lock text-sm"></i></span>
+            <input id="auth-password2" type="password" autocomplete="new-password"
+              placeholder="Ulangi password"
+              class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
+          </div>
+        </div>` : ''}
+
+        <p id="auth-error" class="hidden text-[11px] font-semibold text-rose-500 text-center"></p>
+
+        <button id="auth-submit" type="button"
+          class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-semibold shadow-md shadow-blue-500/25 transition-all">
+          ${isLogin ? 'Masuk' : 'Daftar Sekarang'}
+        </button>
+      </div>
+
+      <div class="text-center mt-4 text-[11px] text-slate-500">
+        ${isLogin
+          ? `Belum punya akun? <button id="auth-switch" class="text-blue-600 font-bold underline-none">Daftar di sini</button>`
+          : `Sudah punya akun? <button id="auth-switch" class="text-blue-600 font-bold underline-none">Masuk</button>`}
+      </div>
+
+      ${isLogin ? `<div class="text-center mt-1.5">
+        <button id="auth-forgot" class="text-[11px] text-slate-400 font-semibold">Lupa password?</button>
+      </div>` : ''}
+    `);
+
+    document.getElementById("toggle-pass").addEventListener("click", () => {
+      const inp = document.getElementById("auth-password");
+      const icon = document.querySelector("#toggle-pass i");
+      const show = inp.type === "password";
+      inp.type = show ? "text" : "password";
+      icon.className = show ? "fa-regular fa-eye-slash text-sm" : "fa-regular fa-eye text-sm";
+    });
+
+    document.getElementById("auth-switch").addEventListener("click", () => {
+      authMode = isLogin ? "register" : "login";
+      renderAuthModal();
+    });
+
+    const forgotBtn = document.getElementById("auth-forgot");
+    if (forgotBtn) forgotBtn.addEventListener("click", openForgotModal);
+
+    document.getElementById("auth-submit").addEventListener("click", submitAuth);
+    document.getElementById("auth-password").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitAuth();
+    });
+    const p2 = document.getElementById("auth-password2");
+    if (p2) p2.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById("auth-error");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+
+  function translateAuthError(code) {
+    const map = {
+      "auth/invalid-email": "Format email tidak valid",
+      "auth/user-not-found": "Email belum terdaftar",
+      "auth/wrong-password": "Password salah",
+      "auth/invalid-credential": "Email atau password salah",
+      "auth/invalid-login-credentials": "Email atau password salah",
+      "auth/email-already-in-use": "Email sudah terdaftar",
+      "auth/weak-password": "Password minimal 6 karakter",
+      "auth/too-many-requests": "Terlalu banyak percobaan, coba lagi nanti",
+      "auth/network-request-failed": "Koneksi internet bermasalah",
+      "auth/operation-not-allowed": "Email/Password belum diaktifkan di Firebase Console"
+    };
+    return map[code] || "Terjadi kesalahan, coba lagi";
+  }
+
+  async function submitAuth() {
+    if (!firebaseReady || !auth) {
+      showAuthError("Firebase belum siap, coba refresh");
+      return;
+    }
+    const email = document.getElementById("auth-email").value.trim();
+    const pass  = document.getElementById("auth-password").value;
+    const pass2El = document.getElementById("auth-password2");
+    const pass2 = pass2El ? pass2El.value : null;
+    const btn = document.getElementById("auth-submit");
+
+    if (!email) { showAuthError("Email wajib diisi"); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { showAuthError("Format email tidak valid"); return; }
+    if (!pass || pass.length < 6) { showAuthError("Password minimal 6 karakter"); return; }
+    if (authMode === "register" && pass !== pass2) { showAuthError("Konfirmasi password tidak cocok"); return; }
+
+    btn.disabled = true;
+    btn.textContent = authMode === "login" ? "Memproses..." : "Mendaftar...";
+
+    try {
+      if (authMode === "login") {
+        await auth.signInWithEmailAndPassword(email, pass);
+        showToast("Berhasil masuk 🎉");
+      } else {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        if (cred.user && !cred.user.displayName) {
+          try { await cred.user.updateProfile({ displayName: email.split("@")[0] }); } catch (_) {}
+        }
+        showToast("Akun berhasil dibuat ✨");
+      }
+      closeModal();
+    } catch (err) {
+      console.warn("Auth error:", err);
+      showAuthError(translateAuthError(err.code));
+      btn.disabled = false;
+      btn.textContent = authMode === "login" ? "Masuk" : "Daftar Sekarang";
+    }
+  }
+
+  /* ---------- LUPA PASSWORD ---------- */
+  function openForgotModal() {
+    openModal(`
+      <div class="flex flex-col items-center mb-4">
+        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
+          <i class="fa-solid fa-key text-xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">Reset Password</h3>
+        <p class="text-[11px] text-slate-500 mt-1 text-center">Masukkan email kamu, kami akan kirim link reset password.</p>
+      </div>
+      <div class="space-y-3">
+        <div class="relative flex items-center">
+          <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-regular fa-envelope text-sm"></i></span>
+          <input id="reset-email" type="email" placeholder="nama@email.com"
+            class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
+        </div>
+        <p id="reset-error" class="hidden text-[11px] font-semibold text-rose-500 text-center"></p>
+        <button id="reset-submit" type="button"
+          class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-500/25">
+          Kirim Link Reset
+        </button>
+        <button id="reset-back" type="button" class="w-full py-2.5 rounded-2xl bg-slate-100 text-slate-600 text-sm font-semibold">
+          Kembali
+        </button>
+      </div>
+    `);
+
+    document.getElementById("reset-back").addEventListener("click", () => {
+      authMode = "login"; renderAuthModal();
+    });
+
+    document.getElementById("reset-submit").addEventListener("click", async () => {
+      const email = document.getElementById("reset-email").value.trim();
+      const errEl = document.getElementById("reset-error");
+      if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+        errEl.textContent = "Format email tidak valid";
+        errEl.classList.remove("hidden");
+        return;
+      }
+      const btn = document.getElementById("reset-submit");
+      btn.disabled = true; btn.textContent = "Mengirim...";
+      try {
+        await auth.sendPasswordResetEmail(email);
+        closeModal();
+        showToast("Link reset dikirim ke email kamu 📧");
+      } catch (err) {
+        errEl.textContent = translateAuthError(err.code);
+        errEl.classList.remove("hidden");
+        btn.disabled = false; btn.textContent = "Kirim Link Reset";
+      }
+    });
+  }
+
+  /* =====================================================
+     FIREBASE AUTH STATE LISTENER
+     ===================================================== */
+  if (firebaseReady && auth) {
+    auth.onAuthStateChanged(async (user) => {
+      const prevUid = currentUid;
+      currentUser = user;
+      currentUid = user ? user.uid : null;
+
+      if (user) {
+        if (prevUid && prevUid !== user.uid) {
+          state.habits = [];
+          state.history = {};
+          state.stats = { streak: 0, totalDone: 0 };
+        }
+        const loaded = await pullFromCloud(user.uid);
+        if (!loaded) await pushToCloud();
+
+        if (!state.user.name && user.displayName) state.user.name = user.displayName;
+        if (!state.user.name && user.email) state.user.name = user.email.split("@")[0];
+        if (!state.user.avatar && user.photoURL) state.user.avatar = user.photoURL;
+
+        saveLocalOnly();
+      }
+
+      updateAuthUI(user);
+      if (currentPage === "home")    renderHome();
+      if (currentPage === "profile") renderProfile();
+    });
+  } else {
+    updateAuthUI(null);
+  }
+
+  /* =====================================================
+     EVENT LISTENERS
+     ===================================================== */
+  groupEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".habit-toggle-btn");
+    if (btn) {
+      const card = btn.closest(".habit-item");
+      const habit = state.habits.find(h => String(h.id) === String(card.dataset.id));
+      if (!habit) return;
+      habit.done = !habit.done;
+      if (!habit.history) habit.history = {};
+      const key = dateKey(new Date());
+      if (habit.done) habit.history[key] = 1;
+      else delete habit.history[key];
+      recomputeGlobalStats();
+      save();
+      if (habit.done) {
+        celebratedHabitId = habit.id;
+        showPage("celebrate");
+      } else {
+        renderHome();
+      }
+      return;
+    }
+    const card = e.target.closest(".habit-item");
+    if (card) openDetail(card.dataset.id);
+  });
+
+  document.getElementById("celebrate-back").addEventListener("click", () => showPage("home"));
+  document.getElementById("celebrate-calendar").addEventListener("click", () => showPage("stats"));
+  document.getElementById("celebrate-ok-btn").addEventListener("click", () => showPage("home"));
+
+  document.getElementById("detail-delete-btn").addEventListener("click", () => {
+    const habit = state.habits.find(h => String(h.id) === String(currentDetailId));
+    if (!habit) return;
+    if (!confirm(`Hapus habit "${habit.title}"?`)) return;
+    state.habits = state.habits.filter(h => String(h.id) !== String(currentDetailId));
+    recomputeGlobalStats();
+    save();
+    currentDetailId = null;
+    showToast('Habit dihapus <i class="twa twa-wastebasket"></i>');
+    showPage("home");
+  });
+
+  navEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-page]");
+    if (!btn) return;
+    showPage(btn.dataset.page);
+  });
+
+  navEl.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
+    btn.style.overflow = "hidden";
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement("span");
+    ripple.className = "nav-ripple";
+    ripple.style.left = (e.clientX - rect.left) + "px";
+    ripple.style.top  = (e.clientY - rect.top)  + "px";
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-goto]");
+    if (!el) return;
+    e.preventDefault();
+    showPage(el.dataset.goto);
+  });
+
+  window.addEventListener("habitpro:navigate", (e) => {
+    if (e.detail && e.detail.page) showPage(e.detail.page);
+  });
+
+  // EVENT UNTUK TOMBOL NOTIFIKASI (Buka Modal Update)
+  document.getElementById("btn-notif").addEventListener("click", () => {
+    state.user.unreadNotif = 0;
+    save();
+    renderHome();
+    
+    openModal(`
+      <div class="flex flex-col items-center mb-4 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+          <i class="twa twa-rocket text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">MyHabits v1.0.0</h3>
+        <p class="text-[11px] font-semibold text-slate-400 mt-1">Pembaruan Terbaru</p>
+      </div>
+
+      <div class="space-y-3 mb-5">
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Rilis perdana aplikasi <b>MyHabits</b>.</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Sinkronisasi cloud (Firebase) untuk backup data otomatis.</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Kustomisasi Background Header dengan Foto atau GIF.</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Pengingat fleksibel: Bisa setel alarm atau tanpa jam.</p>
+        </div>
+      </div>
+
+      <button data-modal-close class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-500/25 transition-all">
+        Mantap!
+      </button>
+    `);
+  });
+
+  /* Pengaturan */
+  document.getElementById("toggle-dark").addEventListener("change", (e) => {
+    applyDark(e.target.checked);
+    scheduleCloudSave();
+    showToast(e.target.checked ? "Mode gelap aktif 🌙" : "Mode terang aktif ☀️");
+  });
+
+  document.getElementById("toggle-sound").addEventListener("change", (e) => {
+    state.user.soundEnabled = e.target.checked;
+    save();
+    if (e.target.checked) { playBeep(); showToast("Suara notifikasi aktif"); }
+    else showToast("Suara notifikasi mati");
+  });
+
+  document.getElementById("row-notif").addEventListener("click", toggleNotif);
+
+  document.getElementById("profile-card").addEventListener("click", openProfileModal);
+  document.getElementById("row-about").addEventListener("click", openAboutModal);
+
+  document.getElementById("pro-manage-btn").addEventListener("click", () => {
+    openModal(`
+      <div class="flex items-center space-x-3 mb-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-800">Pro Pass</h3>
+          <p class="text-[11px] text-slate-500">Langganan premium aktif</p>
+        </div>
+      </div>
+      <div class="space-y-2 mb-4">
+        <div class="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2.5">
+          <span class="text-xs font-semibold text-slate-600">Status</span>
+          <span class="text-xs font-bold text-emerald-600">Aktif</span>
+        </div>
+        <div class="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2.5">
+          <span class="text-xs font-semibold text-slate-600">Berlaku hingga</span>
+          <span class="text-xs font-bold text-slate-800">${esc(state.user.proExpiry || "—")}</span>
+        </div>
+        <div class="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2.5">
+          <span class="text-xs font-semibold text-slate-600">Habit aktif</span>
+          <span class="text-xs font-bold text-slate-800">${state.habits.length}</span>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-400 leading-relaxed mb-4">Kelola perpanjangan langganan melalui toko aplikasi tempat kamu berlangganan.</p>
+      <button data-modal-close class="w-full py-3 rounded-2xl bg-blue-600 text-white text-sm font-semibold">Mengerti</button>
+    `);
+  });
+
+  /* ---------- LOGIN / LOGOUT FIREBASE ---------- */
+  document.getElementById("login-btn").addEventListener("click", () => {
+    if (!firebaseReady) { showToast("Firebase belum siap, coba refresh"); return; }
+    openAuthModal("login");
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    if (!firebaseReady || !auth) { showToast("Firebase belum siap"); return; }
+    if (!confirm("Keluar dari akun? Data lokal tetap ada, cloud tetap aman.")) return;
+    try {
+      await auth.signOut();
+      showToast("Berhasil keluar 👋");
+    } catch (err) {
+      showToast("Gagal keluar: " + (err.message || "coba lagi"));
+    }
+  });
+
+  /* ---------- MODAL: EDIT PROFIL ---------- */
+  let pendingAvatar = null;
+  let pendingHeaderBg = null; // Variabel penampung sementara background
+
+  function openProfileModal() {
+    pendingAvatar = state.user.avatar || null;
+    pendingHeaderBg = state.user.headerBg || null; // Set nilai awal
+
+    openModal(`
+      <h3 class="text-base font-bold text-slate-800 mb-1">Edit Profil</h3>
+      <p class="text-[11px] text-slate-500 mb-4">Ubah nama, foto, dan background header kamu.</p>
+      
+      <div class="flex flex-col items-center mb-4">
+        <div id="avatar-preview" class="w-20 h-20 rounded-full overflow-hidden bg-blue-100 border-2 border-blue-500/20 flex items-center justify-center text-blue-500 mb-2">
+          ${pendingAvatar
+            ? `<img src="${esc(pendingAvatar)}" class="w-full h-full object-cover" alt="">`
+            : `<i class="fa-solid fa-user text-2xl"></i>`}
+        </div>
+        <button id="btn-pick-avatar" type="button" class="text-[11px] font-bold text-blue-600 px-3 py-1.5 rounded-full bg-blue-50 active:scale-95 transition">
+          <i class="fa-solid fa-camera text-[10px] mr-1"></i>Ganti Foto Profil
+        </button>
+        <input type="file" id="avatar-file" accept="image/*" class="hidden"/>
+      </div>
+
+      <div class="flex flex-col items-center mb-4">
+        <button id="btn-pick-bg" type="button" class="text-[11px] font-bold text-emerald-600 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100 active:scale-95 transition flex items-center">
+          <i class="fa-solid fa-image text-[12px] mr-2"></i>Ganti Background Header (Foto/GIF)
+        </button>
+        <button id="btn-reset-bg" type="button" class="text-[10px] text-slate-400 font-semibold mt-2 hover:text-slate-600">Hapus Background</button>
+        <input type="file" id="bg-file" accept="image/*,image/gif" class="hidden"/>
+      </div>
+
+      <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Nama</label>
+      <input id="edit-name" type="text" maxlength="30" value="${esc(state.user.name || "")}"
+        placeholder="Nama kamu"
+        class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all mb-4"/>
+      
+      <div class="flex gap-2">
+        <button data-modal-close class="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-semibold">Batal</button>
+        <button id="save-profile" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white text-sm font-semibold">Simpan</button>
+      </div>
+    `);
+
+    document.getElementById("btn-pick-avatar").addEventListener("click", () => {
+      document.getElementById("avatar-file").click();
+    });
+    document.getElementById("avatar-file").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      fileToAvatar(f, (dataUrl) => {
+        pendingAvatar = dataUrl;
+        const prev = document.getElementById("avatar-preview");
+        if (prev) prev.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover" alt="">`;
+      });
+    });
+
+    // Listener Ganti Background Header
+    document.getElementById("btn-pick-bg").addEventListener("click", () => {
+      document.getElementById("bg-file").click();
+    });
+    document.getElementById("bg-file").addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+
+      // Batasan ukuran file (karena Base64 disimpan di Firestore, maksimal ~800KB)
+      if (f.size > 800 * 1024) {
+        showToast("Maksimal file 800KB agar sinkronisasi lancar");
+        return;
+      }
+
+      // Baca file sebagai Data URL (Mendukung GIF tanpa merusak animasi)
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        pendingHeaderBg = ev.target.result;
+        showToast("Background dipilih, klik Simpan");
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Listener Hapus Background
+    document.getElementById("btn-reset-bg").addEventListener("click", () => {
+      pendingHeaderBg = null;
+      showToast("Background dihapus, klik Simpan");
+    });
+
+    document.getElementById("save-profile").addEventListener("click", async () => {
+      const n = document.getElementById("edit-name").value.trim();
+      state.user.name = n || "Pengguna";
+      state.user.avatar = pendingAvatar;
+      state.user.headerBg = pendingHeaderBg; // Simpan perubahan background
+      
+      if (!state.user.tier || state.user.tier === "Pengguna Baru") {
+        state.user.tier = state.habits.length > 0 ? "Pejuang Habit" : "Pengguna Baru";
+      }
+      save();
+      if (currentUser && n) {
+        try { await currentUser.updateProfile({ displayName: n }); } catch (_) {}
+      }
+      renderHome(); renderProfile(); closeModal();
+      showToast("Profil diperbarui ✨");
+    });
+  }
+
+  function fileToAvatar(file, cb) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const size = 160;
+          const canvas = document.createElement("canvas");
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          const scale = Math.max(size / img.width, size / img.height);
+          const w = img.width * scale, h = img.height * scale;
+          ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+          cb(canvas.toDataURL("image/jpeg", 0.85));
+        } catch (_) { cb(reader.result); }
+      };
+      img.onerror = () => cb(null);
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ---------- MODAL: TENTANG ---------- */
+  function openAboutModal() {
+    openModal(`
+      <div class="text-center">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-3">
+          <i class="twa twa-sparkles text-3xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">MyHabits</h3>
+        <p class="text-[11px] font-semibold text-slate-400 mb-3">Versi 1.0.0</p>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          MyHabits membantu kamu membangun kebiasaan baik dengan pengingat harian,
+          pelacakan streak, dan kalender riwayat. Data tersimpan lokal dan tersinkronisasi
+          ke cloud jika kamu login.
+        </p>
+      </div>
+      <div class="mt-4 space-y-2">
+        <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5">
+          <span class="text-xs font-semibold text-slate-600">Total habit</span>
+          <span class="text-xs font-bold text-slate-800">${state.habits.length}</span>
+        </div>
+        <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5">
+          <span class="text-xs font-semibold text-slate-600">Cloud sync</span>
+          <span class="text-xs font-bold ${currentUser ? 'text-emerald-600' : 'text-slate-500'}">${currentUser ? 'Aktif' : 'Off'}</span>
+        </div>
+      </div>
+      <button data-modal-close class="mt-4 w-full py-3 rounded-2xl bg-blue-600 text-white text-sm font-semibold">Tutup</button>
+    `);
+  }
+
+  /* =====================================================
+     ADD PAGE
+     ===================================================== */
+  const EMOJI_LIST = [
+    // Umum
+    { twa:'twa-sun', bg:'bg-yellow-50', cat:'umum' },
+    { twa:'twa-crescent-moon', bg:'bg-indigo-50', cat:'umum' },
+    { twa:'twa-star', bg:'bg-amber-50', cat:'umum' },
+    { twa:'twa-sparkles', bg:'bg-blue-50', cat:'umum' },
+    { twa:'twa-fire', bg:'bg-orange-50', cat:'umum' },
+    { twa:'twa-droplet', bg:'bg-cyan-50', cat:'umum' },
+    { twa:'twa-red-heart', bg:'bg-rose-50', cat:'umum' },
+    { twa:'twa-smiling-face-with-smiling-eyes', bg:'bg-yellow-50', cat:'umum' },
+    { twa:'twa-direct-hit', bg:'bg-red-50', cat:'umum' },
+    { twa:'twa-rocket', bg:'bg-violet-50', cat:'umum' },
+    { twa:'twa-bell', bg:'bg-amber-50', cat:'umum' },
+    { twa:'twa-check-mark-button', bg:'bg-emerald-50', cat:'umum' },
+    { twa:'twa-alarm-clock', bg:'bg-sky-50', cat:'umum' },
+    { twa:'twa-glowing-star', bg:'bg-yellow-50', cat:'umum' },
+    
+    // Sehat
+    { twa:'twa-green-salad', bg:'bg-emerald-50', cat:'sehat' },
+    { twa:'twa-red-apple', bg:'bg-red-50', cat:'sehat' },
+    { twa:'twa-cup-with-straw', bg:'bg-cyan-50', cat:'sehat' },
+    { twa:'twa-pill', bg:'bg-sky-50', cat:'sehat' },
+    { twa:'twa-bed', bg:'bg-indigo-50', cat:'sehat' },
+    { twa:'twa-person-in-lotus-position', bg:'bg-teal-50', cat:'sehat' },
+    { twa:'twa-soap', bg:'bg-blue-50', cat:'sehat' },
+    { twa:'twa-toothbrush', bg:'bg-sky-50', cat:'sehat' },
+    { twa:'twa-carrot', bg:'bg-orange-50', cat:'sehat' },
+    { twa:'twa-teacup-without-handle', bg:'bg-emerald-50', cat:'sehat' },
+    { twa:'twa-potable-water', bg:'bg-cyan-50', cat:'sehat' },
+    { twa:'twa-lotion-bottle', bg:'bg-pink-50', cat:'sehat' },
+    
+    // Olahraga
+    { twa:'twa-runner', bg:'bg-orange-50', cat:'olahraga' },
+    { twa:'twa-pedestrian', bg:'bg-green-50', cat:'olahraga' },
+    { twa:'twa-bicycle', bg:'bg-blue-50', cat:'olahraga' },
+    { twa:'twa-swimmer', bg:'bg-cyan-50', cat:'olahraga' },
+    { twa:'twa-person-lifting-weights', bg:'bg-red-50', cat:'olahraga' },
+    { twa:'twa-soccer-ball', bg:'bg-slate-100', cat:'olahraga' },
+    { twa:'twa-basketball', bg:'bg-amber-50', cat:'olahraga' },
+    { twa:'twa-person-climbing', bg:'bg-lime-50', cat:'olahraga' },
+    { twa:'twa-person-cartwheeling', bg:'bg-teal-50', cat:'olahraga' },
+    { twa:'twa-boxing-glove', bg:'bg-rose-50', cat:'olahraga' },
+    { twa:'twa-skateboard', bg:'bg-violet-50', cat:'olahraga' },
+    { twa:'twa-tennis', bg:'bg-yellow-50', cat:'olahraga' },
+    
+    // Belajar
+    { twa:'twa-books', bg:'bg-blue-50', cat:'belajar' },
+    { twa:'twa-open-book', bg:'bg-indigo-50', cat:'belajar' },
+    { twa:'twa-memo', bg:'bg-fuchsia-50', cat:'belajar' },
+    { twa:'twa-writing-hand', bg:'bg-purple-50', cat:'belajar' },
+    { twa:'twa-brain', bg:'bg-purple-50', cat:'belajar' },
+    { twa:'twa-light-bulb', bg:'bg-yellow-50', cat:'belajar' },
+    { twa:'twa-graduation-cap', bg:'bg-slate-100', cat:'belajar' },
+    { twa:'twa-triangular-ruler', bg:'bg-sky-50', cat:'belajar' },
+    { twa:'twa-pen', bg:'bg-blue-50', cat:'belajar' },
+    { twa:'twa-notebook', bg:'bg-amber-50', cat:'belajar' },
+    { twa:'twa-input-latin-letters', bg:'bg-cyan-50', cat:'belajar' },
+    { twa:'twa-puzzle-piece', bg:'bg-lime-50', cat:'belajar' },
+    
+    // Rumah
+    { twa:'twa-house', bg:'bg-orange-50', cat:'rumah' },
+    { twa:'twa-broom', bg:'bg-lime-50', cat:'rumah' },
+    { twa:'twa-basket', bg:'bg-teal-50', cat:'rumah' },
+    { twa:'twa-shopping-cart', bg:'bg-emerald-50', cat:'rumah' },
+    { twa:'twa-cooking', bg:'bg-amber-50', cat:'rumah' },
+    { twa:'twa-sponge', bg:'bg-cyan-50', cat:'rumah' },
+    { twa:'twa-bucket', bg:'bg-blue-50', cat:'rumah' },
+    { twa:'twa-couch-and-lamp', bg:'bg-indigo-50', cat:'rumah' },
+    { twa:'twa-potted-plant', bg:'bg-green-50', cat:'rumah' },
+    { twa:'twa-wastebasket', bg:'bg-slate-100', cat:'rumah' },
+    { twa:'twa-wrench', bg:'bg-slate-100', cat:'rumah' },
+    { twa:'twa-ice-cube', bg:'bg-sky-50', cat:'rumah' },
+    
+    // Hobi
+    { twa:'twa-artist-palette', bg:'bg-pink-50', cat:'hobi' },
+    { twa:'twa-musical-note', bg:'bg-violet-50', cat:'hobi' },
+    { twa:'twa-headphone', bg:'bg-indigo-50', cat:'hobi' },
+    { twa:'twa-camera', bg:'bg-slate-100', cat:'hobi' },
+    { twa:'twa-guitar', bg:'bg-amber-50', cat:'hobi' },
+    { twa:'twa-video-game', bg:'bg-purple-50', cat:'hobi' },
+    { twa:'twa-clapper-board', bg:'bg-rose-50', cat:'hobi' },
+    { twa:'twa-magic-wand', bg:'bg-fuchsia-50', cat:'hobi' },
+    { twa:'twa-thread', bg:'bg-teal-50', cat:'hobi' },
+    { twa:'twa-performing-arts', bg:'bg-orange-50', cat:'hobi' },
+    { twa:'twa-camera-with-flash', bg:'bg-slate-100', cat:'hobi' },
+    { twa:'twa-musical-keyboard', bg:'bg-slate-100', cat:'hobi' },
+    
+    // Lainnya
+    { twa:'twa-folded-hands', bg:'bg-amber-50', cat:'lain' },
+    { twa:'twa-trophy', bg:'bg-yellow-50', cat:'lain' },
+    { twa:'twa-lock', bg:'bg-slate-100', cat:'lain' },
+    { twa:'twa-key', bg:'bg-amber-50', cat:'lain' },
+    { twa:'twa-wrapped-gift', bg:'bg-rose-50', cat:'lain' },
+    { twa:'twa-balloon', bg:'bg-red-50', cat:'lain' },
+    { twa:'twa-money-bag', bg:'bg-emerald-50', cat:'lain' },
+    { twa:'twa-world-map', bg:'bg-teal-50', cat:'lain' },
+    { twa:'twa-compass', bg:'bg-sky-50', cat:'lain' },
+    { twa:'twa-coin', bg:'bg-yellow-50', cat:'lain' },
+    { twa:'twa-briefcase', bg:'bg-slate-100', cat:'lain' },
+    { twa:'twa-desktop-computer', bg:'bg-blue-50', cat:'lain' }
+  ];
+
+  const EMOJI_CATS = [
+    { id:'all', label:'Semua' },
+    { id:'umum', label:'Umum' },
+    { id:'sehat', label:'Sehat' },
+    { id:'olahraga', label:'Olahraga' },
+    { id:'belajar', label:'Belajar' },
+    { id:'rumah', label:'Rumah' },
+    { id:'hobi', label:'Hobi' },
+    { id:'lain', label:'Lainnya' }
+  ];
+
+  const FREQ_LABEL = { daily: 'Setiap Hari', workday: 'Hari Kerja', custom: 'Kustom' };
+
+  let selectedEmoji = EMOJI_LIST[0];
+  let selectedFreq  = 'daily';
+  let selectedTimeType = 'alarm';
+  let selectedDays  = new Set(ALL_DAYS);
+  let emojiCat      = 'all';
+
+  const iconPreview       = document.getElementById('icon-preview');
+  const iconPreviewEmoji  = document.getElementById('icon-preview-emoji');
+  const iconPicker        = document.getElementById('icon-picker');
+  const iconPickerGrid    = document.getElementById('icon-picker-grid');
+  const emojiTabsEl       = document.getElementById('emoji-tabs');
+  const btnChangeIcon     = document.getElementById('btn-change-icon');
+  const frequencyGroup    = document.getElementById('frequency-group');
+  const customDaysPanel   = document.getElementById('custom-days-panel');
+  const dayPickerEl       = document.getElementById('day-picker');
+  const customDaysHint    = document.getElementById('custom-days-hint');
+  const addHabitForm      = document.getElementById('add-habit-form');
+  const habitNameInput    = document.getElementById('habit-name');
+  const habitTimeInput    = document.getElementById('habit-time');
+  const reminderSwitch    = document.getElementById('reminder-switch');
+  const reminderNote      = document.getElementById('reminder-note');
+  const rtGroup           = document.getElementById('reminder-type-group');
+  const timeWrapper       = document.getElementById('time-input-wrapper');
+  const reminderLabel     = document.getElementById('reminder-label');
+  const reminderDesc      = document.getElementById('reminder-desc');
+
+  function renderEmojiTabs() {
+    emojiTabsEl.innerHTML = EMOJI_CATS.map(c => `
+      <button type="button" data-cat="${c.id}"
+        class="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition ${
+          c.id === emojiCat ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 active:scale-95'
+        }">${c.label}</button>
+    `).join('');
+  }
+
+  function renderEmojiGrid() {
+    const list = EMOJI_LIST.map((e, i) => ({ e, i }))
+      .filter(x => emojiCat === 'all' || x.e.cat === emojiCat);
+    iconPickerGrid.innerHTML = list.map(({ e, i }) => `
+      <button type="button" data-emoji="${i}" aria-label="Pilih ikon"
+        class="emoji-opt w-10 h-10 rounded-lg ${e.bg} flex items-center justify-center active:scale-90 transition-transform">
+        <i class="twa ${e.twa} text-2xl"></i>
+      </button>
+    `).join('');
+  }
+
+  emojiTabsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-cat]');
+    if (!btn) return;
+    emojiCat = btn.dataset.cat;
+    renderEmojiTabs();
+    renderEmojiGrid();
+  });
+
+  iconPickerGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-emoji]');
+    if (!btn) return;
+    applyEmojiChoice(EMOJI_LIST[Number(btn.dataset.emoji)]);
+    iconPicker.classList.add('hidden');
+  });
+
+  function applyEmojiChoice(choice) {
+    selectedEmoji = choice;
+    iconPreviewEmoji.innerHTML = `<i class="twa ${choice.twa} text-5xl"></i>`;
+    iconPreview.className = `relative w-24 h-24 rounded-3xl ${choice.bg} border border-blue-200 flex items-center justify-center shadow-inner active:scale-95 transition-all`;
+  }
+
+  function togglePicker() { iconPicker.classList.toggle('hidden'); }
+  btnChangeIcon.addEventListener('click', togglePicker);
+  iconPreview.addEventListener('click', togglePicker);
+
+  dayPickerEl.innerHTML = DAYS.map(d => `
+    <button type="button" data-day="${d.v}" class="day-chip">${d.short}</button>
+  `).join('');
+
+  function updateDaysHint() {
+    const n = selectedDays.size;
+    if (n === 0) {
+      customDaysHint.textContent = 'Belum dipilih';
+      customDaysHint.className = 'text-[10px] font-semibold text-rose-500';
+    } else if (n === 7) {
+      customDaysHint.textContent = 'Setiap hari';
+      customDaysHint.className = 'text-[10px] font-semibold text-blue-600';
+    } else {
+      customDaysHint.textContent = `${n} hari dipilih`;
+      customDaysHint.className = 'text-[10px] font-semibold text-blue-600';
+    }
+  }
+
+  function renderDayPicker() {
+    [...dayPickerEl.children].forEach(btn => {
+      const isOn = selectedDays.has(Number(btn.dataset.day));
+      btn.classList.toggle('day-chip-active', isOn);
+      btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+    });
+    updateDaysHint();
+  }
+
+  dayPickerEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-day]');
+    if (!btn) return;
+    const v = Number(btn.dataset.day);
+    if (selectedDays.has(v)) selectedDays.delete(v);
+    else selectedDays.add(v);
+    renderDayPicker();
+  });
+
+  document.getElementById('day-select-all').addEventListener('click', () => {
+    selectedDays = new Set(ALL_DAYS); renderDayPicker();
+  });
+  document.getElementById('day-select-workday').addEventListener('click', () => {
+    selectedDays = new Set(WORK_DAYS); renderDayPicker();
+  });
+  document.getElementById('day-clear-all').addEventListener('click', () => {
+    selectedDays = new Set(); renderDayPicker();
+  });
+
+  function setFrequency(freq, syncDays) {
+    if (!FREQ_LABEL[freq]) freq = 'daily';
+    selectedFreq = freq;
+    frequencyGroup.querySelectorAll('.freq-btn').forEach(b => {
+      const on = b.dataset.freq === freq;
+      b.classList.toggle('bg-white', on);
+      b.classList.toggle('text-blue-600', on);
+      b.classList.toggle('shadow-sm', on);
+      b.classList.toggle('font-semibold', on);
+      b.classList.toggle('text-slate-600', !on);
+      b.classList.toggle('font-medium', !on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    customDaysPanel.classList.toggle('hidden', freq !== 'custom');
+    if (syncDays) {
+      if (freq === 'daily')        selectedDays = new Set(ALL_DAYS);
+      else if (freq === 'workday') selectedDays = new Set(WORK_DAYS);
+      else if (selectedDays.size === 0) selectedDays = new Set(ALL_DAYS);
+    }
+    renderDayPicker();
+  }
+
+  frequencyGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.freq-btn');
+    if (!btn) return;
+    setFrequency(btn.dataset.freq, true);
+  });
+
+  /* TIPE PENGINGAT (ALARM / TANPA JAM) */
+  function setTimeType(type) {
+    selectedTimeType = type;
+    rtGroup.querySelectorAll('.rt-btn').forEach(b => {
+      const on = b.dataset.type === type;
+      b.classList.toggle('bg-white', on);
+      b.classList.toggle('text-blue-600', on);
+      b.classList.toggle('shadow-sm', on);
+      b.classList.toggle('font-semibold', on);
+      b.classList.toggle('text-slate-600', !on);
+      b.classList.toggle('font-medium', !on);
+    });
+    timeWrapper.classList.toggle('hidden', type === 'anytime');
+    
+    if (type === 'anytime') {
+      reminderLabel.textContent = "Catatan";
+      reminderDesc.textContent = "Tampilkan catatan di halaman ini";
+    } else {
+      reminderLabel.textContent = "Pengingat";
+      reminderDesc.textContent = "Dapatkan notifikasi pengingat";
+    }
+  }
+
+  rtGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.rt-btn');
+    if (!btn) return;
+    setTimeType(btn.dataset.type);
+  });
+
+  function resolveDays() {
+    if (selectedFreq === 'daily')   return [...ALL_DAYS];
+    if (selectedFreq === 'workday') return [...WORK_DAYS];
+    return [...selectedDays].sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
+  }
+
+  function buildSubtitle(timeStr, freq, days, type) {
+    let freqStr = "";
+    if (freq === 'custom') {
+      const shorts = DAY_ORDER.filter(v => days.includes(v))
+        .map(v => DAYS.find(d => d.v === v).short);
+      freqStr = shorts.join(', ');
+    } else {
+      freqStr = FREQ_LABEL[freq];
+    }
+
+    if (type === 'anytime' || !timeStr) {
+      return `Tanpa Jam · ${freqStr}`;
+    }
+    return `${timeStr} · ${freqStr}`;
+  }
+
+  function generateId() {
+    return 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function resetAddForm() {
+    applyEmojiChoice(EMOJI_LIST[0]);
+    iconPicker.classList.add('hidden');
+    emojiCat = 'all';
+    renderEmojiTabs();
+    renderEmojiGrid();
+    habitNameInput.value = '';
+    habitTimeInput.value = '07:00';
+    reminderSwitch.checked = true;
+    reminderNote.value = '';
+    selectedDays = new Set(ALL_DAYS);
+    setFrequency('daily', true);
+    setTimeType('alarm');
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[300] bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 max-w-[90%] text-center';
+    t.style.animation = 'page-fade-in 0.3s ease-out';
+    t.innerHTML = msg;
+    document.body.appendChild(t);
+    setTimeout(() => {
+      t.style.transition = 'opacity 0.3s';
+      t.style.opacity = '0';
+      setTimeout(() => t.remove(), 300);
+    }, 1600);
+  }
+
+  addHabitForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = habitNameInput.value.trim();
+    if (!name) {
+      habitNameInput.focus();
+      habitNameInput.animate(
+        [{transform:'translateX(0)'},{transform:'translateX(-6px)'},
+         {transform:'translateX(6px)'},{transform:'translateX(-4px)'},
+         {transform:'translateX(4px)'},{transform:'translateX(0)'}],
+        {duration:400}
+      );
+      return;
+    }
+    const days = resolveDays();
+    if (selectedFreq === 'custom' && days.length === 0) {
+      showToast('Pilih minimal satu hari dulu ya');
+      customDaysPanel.classList.remove('hidden');
+      return;
+    }
+    const timeStr  = selectedTimeType === 'alarm' ? (habitTimeInput.value || '07:00') : null;
+    const subtitle = buildSubtitle(timeStr, selectedFreq, days, selectedTimeType);
+    state.habits.push({
+      id: generateId(),
+      title: name,
+      subtitle,
+      twa: selectedEmoji.twa, // Simpan kelas twa
+      bg: selectedEmoji.bg,
+      done: false,
+      time: timeStr,
+      frequency: selectedFreq,
+      days,
+      reminder: reminderSwitch.checked,
+      note: reminderNote.value.trim(),
+      history: {},
+      createdAt: dateKey(new Date())
+    });
+    if (!state.user.name) state.user.name = "Pengguna";
+    if (state.habits.length >= 1 && (!state.user.tier || state.user.tier === "Pengguna Baru")) {
+      state.user.tier = "Pejuang Habit";
+    }
+    recomputeGlobalStats();
+    save();
+    resetAddForm();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    showToast('Habit berhasil ditambahkan ✨');
+    showPage('home');
+  });
+
+  /* =====================================================
+     INIT
+     ===================================================== */
+  load();
+  applyDark(!!state.user.darkMode);
+  recomputeGlobalStats();
+  renderEmojiTabs();
+  renderEmojiGrid();
+  setFrequency('daily', true);
+  setTimeType('alarm');
+  startReminderLoop();
+
+  window.HabitApp = { state, showPage, renderHome, renderProfile, renderStats, renderDetail, openDetail, save, load };
+  const initial = (location.hash || "#home").replace("#", "");
+  showPage(VALID.includes(initial) ? initial : "home");
+})();
+</script>
+</body>
+</html>
