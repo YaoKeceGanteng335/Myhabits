@@ -183,6 +183,35 @@ tailwind.config = {
   html.dark .day-chip.day-chip-active { background:#2563eb; color:#fff; }
   html.dark .sky-gradient { background: linear-gradient(180deg,#0b1220 0%,#0f172a 55%,#111c2e 100%); }
   html.dark .bg-blue-50\/70 { background-color:#1e3a5f !important; }
+
+  /* ============ ICON PICKER BARU ============ */
+  #page-icon-picker { background-color: #ffffff; }
+  .icon-btn {
+      transition: all 0.2s ease;
+      border: 1.5px solid #f1f5f9;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  }
+  .icon-btn:active { transform: scale(0.9); }
+  .icon-btn.selected {
+      border: 2px solid #0f172a;
+      background-color: #ffffff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+  .icon-btn i { color: #0f172a; font-size: 1.35rem; }
+
+  /* ============ COLOR PICKER ============ */
+  .color-btn {
+    width: 2.25rem; height: 2.25rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid transparent; transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .color-btn.selected {
+    border-color: #0f172a;
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .color-btn:active { transform: scale(0.9); }
 </style>
 </head>
 <body class="bg-[#F4F7FC] text-slate-800 antialiased min-h-screen flex justify-center selection:bg-blue-500 selection:text-white font-sans">
@@ -528,23 +557,31 @@ tailwind.config = {
 
     <main class="flex-1 px-5 pb-32 pt-2">
       <form id="add-habit-form" class="space-y-5" novalidate>
+        <!-- Hidden input -->
+        <input type="hidden" id="habit-icon" value="fa-solid fa-sun" />
+        <input type="hidden" id="habit-icon-bg" value="bg-amber-50" />
+        <input type="hidden" id="habit-icon-color" value="text-amber-500" />
+
         <section class="flex flex-col items-center justify-center pt-1 pb-2">
           <button type="button" id="icon-preview" aria-label="Pilih ikon habit"
-            class="relative w-24 h-24 rounded-3xl bg-blue-50 border border-blue-200 flex items-center justify-center shadow-inner active:scale-95 transition-all">
-            <span class="absolute top-2 left-2.5 text-blue-300 font-medium text-lg leading-none select-none">+</span>
-            <span id="icon-preview-emoji"><i class="twa twa-books text-5xl"></i></span>
+            class="relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all">
+            <span class="absolute top-2 left-2.5 text-amber-300 font-medium text-lg leading-none select-none">+</span>
+            <span id="icon-preview-emoji"><i class="fa-solid fa-sun text-4xl text-amber-500"></i></span>
           </button>
+          
           <button type="button" id="btn-change-icon"
             class="mt-2.5 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold active:scale-95 transition-all">
             Ganti Ikon
           </button>
-        </section>
 
-        <div id="icon-picker" class="hidden bg-white rounded-2xl p-3 border border-slate-100 shadow-md">
-          <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2 px-1">Pilih Ikon</p>
-          <div id="emoji-tabs" class="flex gap-1.5 overflow-x-auto pb-2.5 mb-1"></div>
-          <div id="icon-picker-grid" class="grid grid-cols-6 gap-1.5 max-h-56 overflow-y-auto pr-0.5"></div>
-        </div>
+          <!-- Color Picker (Warna Ikon) -->
+          <div class="mt-4 flex flex-col items-center">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Warna Ikon</span>
+            <div id="icon-color-picker" class="flex space-x-3">
+              <!-- Akan diisi oleh JS -->
+            </div>
+          </div>
+        </section>
 
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-name">Nama Habit</label>
@@ -775,6 +812,25 @@ tailwind.config = {
     </div>
   </section>
 
+  <!-- ==================== PAGE: ICON PICKER (BARU KATEGORI) ==================== -->
+  <section id="page-icon-picker" class="page hidden fixed inset-0 z-[300] flex flex-col">
+    <!-- Header -->
+    <nav class="px-5 py-4 flex items-center justify-between bg-white border-b border-slate-100 shrink-0">
+      <button id="icon-picker-back" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:bg-slate-100 transition-colors" type="button">
+        <i class="fa-solid fa-chevron-left text-lg"></i>
+      </button>
+      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Baru Kategori</h1>
+      <button id="icon-picker-save" class="bg-[#e15b64] hover:bg-[#d14b54] text-white text-sm font-semibold px-5 py-2 rounded-full shadow-md shadow-red-500/20 active:scale-95 transition-transform" type="button">
+        Buat
+      </button>
+    </nav>
+    
+    <!-- Scrollable Content -->
+    <div id="icon-picker-content" class="flex-1 overflow-y-auto px-5 py-4 pb-24 space-y-6">
+      <!-- Akan diisi oleh JavaScript -->
+    </div>
+  </section>
+
   <!-- ==================== NAV ==================== -->
   <nav id="bottom-nav" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[88%] max-w-[340px] glass-pill rounded-full px-3 py-2 flex justify-between items-center shadow-2xl z-50 border border-white/20" aria-label="Main Navigation"></nav>
 
@@ -825,13 +881,15 @@ tailwind.config = {
      ===================================================== */
   const STORAGE_KEY = 'myhabits_v1';
 
+  const DEFAULT_USER = {
+    name: "", status: "Member", isPro: false, isVip: false, avatar: null,
+    headerBg: null, appBg: null,
+    tier: "Pengguna Baru", proExpiry: "", unreadNotif: 0,
+    notifEnabled: false, soundEnabled: false, darkMode: false
+  };
+
   const state = {
-    user: {
-      name: "", status: "Member", isPro: false, isVip: false, avatar: null,
-      headerBg: null, appBg: null,
-      tier: "Pengguna Baru", proExpiry: "", unreadNotif: 0,
-      notifEnabled: false, soundEnabled: false, darkMode: false
-    },
+    user: { ...DEFAULT_USER },
     stats: { streak: 0, totalDone: 0 },
     habits: [],
     history: {}
@@ -852,7 +910,6 @@ tailwind.config = {
   function pad2(n) { return String(n).padStart(2, "0"); }
   function dateKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
   
-  // Fungsi untuk mendapatkan tanggal "logis" di mana jam 00:00 - 00:59 masih dihitung hari sebelumnya.
   function getLogicalDate() {
     const now = new Date();
     if (now.getHours() === 0) { 
@@ -861,16 +918,13 @@ tailwind.config = {
     return now;
   }
 
-  // Timer untuk mereset habit tepat jam 01:00 malam
   function setupMidnightReset() {
     const now = new Date();
     const next1AM = new Date();
     next1AM.setHours(1, 0, 0, 0);
-    
     if (now.getTime() >= next1AM.getTime()) {
       next1AM.setDate(next1AM.getDate() + 1);
     }
-    
     const timeUntilReset = next1AM.getTime() - now.getTime();
     setTimeout(() => {
       renderHome();
@@ -881,7 +935,6 @@ tailwind.config = {
 
   const ALL_DAYS = [0,1,2,3,4,5,6];
   const WORK_DAYS = [1,2,3,4,5];
-  const DAY_ORDER = [1,2,3,4,5,6,0];
   const DAYS = [
     { v: 1, short: 'Sen', full: 'Senin'  },
     { v: 2, short: 'Sel', full: 'Selasa' },
@@ -1046,7 +1099,6 @@ tailwind.config = {
      APPLY BACKGROUNDS
      ===================================================== */
   function applyBackgrounds() {
-    // 1. App Background (Wallpaper utama)
     const mainEl = document.querySelector("main");
     if (state.user.appBg) {
       mainEl.style.backgroundImage = `url('${state.user.appBg}')`;
@@ -1059,7 +1111,6 @@ tailwind.config = {
       mainEl.classList.add("bg-[#F6F8FC]");
     }
 
-    // 2. Header Background
     const headerEl = document.getElementById("home-header");
     const overlayEl = document.getElementById("header-overlay");
     if (state.user.headerBg) {
@@ -1147,6 +1198,12 @@ tailwind.config = {
      ===================================================== */
   function habitIconHTML(h, size) {
     const cls = size === "lg" ? "text-3xl" : "text-2xl";
+    // Ambil warna ikon yang tersimpan, fallback ke slate-900 (hitam)
+    const colorClass = h.iconColor || 'text-slate-900'; 
+    
+    if (h.twa && h.twa.includes('fa-')) return `<i class="${h.twa} ${cls} ${colorClass}"></i>`;
+    if (h.emoji && h.emoji.includes('fa-')) return `<i class="${h.emoji} ${cls} ${colorClass}"></i>`;
+    
     if (h.twa) return `<i class="twa ${h.twa} ${cls}"></i>`;
     if (h.emoji && h.emoji.startsWith('twa-')) return `<i class="twa ${h.emoji} ${cls}"></i>`;
     if (h.emoji) return `<span class="${cls} leading-none">${esc(h.emoji)}</span>`;
@@ -1202,7 +1259,6 @@ tailwind.config = {
     document.getElementById("stat-streak").textContent = stats.streak;
     document.getElementById("stat-total").textContent  = stats.totalDone;
 
-    // Gunakan Logical Date untuk mengecek apakah habit selesai hari ini (reset jam 1 pagi)
     const logicalToday = getLogicalDate();
     const logicalTodayKey = dateKey(logicalToday);
     
@@ -1217,7 +1273,6 @@ tailwind.config = {
     emptyEl.classList.toggle("hidden", habits.length > 0);
     noneTodayEl.classList.toggle("hidden", !(habits.length > 0 && todayHabits.length === 0));
 
-    // Inisialisasi Drag and Drop menggunakan SortableJS
     if (typeof Sortable !== 'undefined' && !groupEl._sortable) {
       groupEl._sortable = new Sortable(groupEl, {
         animation: 150,
@@ -1233,7 +1288,6 @@ tailwind.config = {
             if (h) ordered.push(h);
           });
           
-          // Sisa habit yang tidak masuk hari ini taruh di bawah
           state.habits.forEach(h => {
             if (!orderedIds.includes(String(h.id))) ordered.push(h);
           });
@@ -1825,7 +1879,7 @@ tailwind.config = {
   }
 
   /* =====================================================
-     FIREBASE AUTH STATE LISTENER
+     FIREBASE AUTH STATE LISTENER & LOGOUT FIX
      ===================================================== */
   if (firebaseReady && auth) {
     auth.onAuthStateChanged(async (user) => {
@@ -1834,6 +1888,7 @@ tailwind.config = {
       currentUid = user ? user.uid : null;
 
       if (user) {
+        // LOGIN
         if (prevUid && prevUid !== user.uid) {
           state.habits = [];
           state.history = {};
@@ -1847,21 +1902,32 @@ tailwind.config = {
         if (!state.user.avatar && user.photoURL) state.user.avatar = user.photoURL;
 
         saveLocalOnly();
+      } else {
+        // LOGOUT
+        if (prevUid) {
+          state.user = { ...DEFAULT_USER };
+          state.stats = { streak: 0, totalDone: 0 };
+          state.habits = [];
+          state.history = {};
+          
+          localStorage.removeItem(STORAGE_KEY);
+          applyDark(false);
+        }
       }
 
       updateAuthUI(user);
       if (currentPage === "home")    renderHome();
       if (currentPage === "profile") renderProfile();
+      if (currentPage === "stats")   renderStats();
     });
   } else {
     updateAuthUI(null);
   }
 
   /* =====================================================
-     EVENT LISTENERS
+     EVENT LISTENERS (HABITS)
      ===================================================== */
   groupEl.addEventListener("click", (e) => {
-    // Abaikan klik pada drag handle agar tidak memicu detail
     if (e.target.closest(".habit-drag-handle")) return;
 
     const btn = e.target.closest(".habit-toggle-btn");
@@ -1870,7 +1936,6 @@ tailwind.config = {
       const habit = state.habits.find(h => String(h.id) === String(card.dataset.id));
       if (!habit) return;
       
-      // Gunakan Logical Date untuk toggle
       const logicalTodayKey = dateKey(getLogicalDate());
       
       habit.done = !habit.done;
@@ -1940,7 +2005,6 @@ tailwind.config = {
     if (e.detail && e.detail.page) showPage(e.detail.page);
   });
 
-  // EVENT UNTUK TOMBOL NOTIFIKASI (Buka Modal Update)
   document.getElementById("btn-notif").addEventListener("click", () => {
     state.user.unreadNotif = 0;
     save();
@@ -2045,7 +2109,7 @@ tailwind.config = {
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     if (!firebaseReady || !auth) { showToast("Firebase belum siap"); return; }
-    if (!confirm("Keluar dari akun? Data lokal tetap ada, cloud tetap aman.")) return;
+    if (!confirm("Keluar dari akun? Data lokal akan dibersihkan, data cloud tetap aman.")) return;
     try {
       await auth.signOut();
       showToast("Berhasil keluar 👋");
@@ -2114,7 +2178,6 @@ tailwind.config = {
       </div>
     `);
 
-    // Foto Profil
     document.getElementById("btn-pick-avatar").addEventListener("click", () => {
       document.getElementById("avatar-file").click();
     });
@@ -2128,7 +2191,6 @@ tailwind.config = {
       });
     });
 
-    // Header Background
     document.getElementById("btn-pick-header").addEventListener("click", () => {
       document.getElementById("header-file").click();
     });
@@ -2149,7 +2211,6 @@ tailwind.config = {
       showToast("Header dihapus, klik Simpan");
     });
 
-    // App Background
     document.getElementById("btn-pick-appbg").addEventListener("click", () => {
       document.getElementById("appbg-file").click();
     });
@@ -2170,13 +2231,11 @@ tailwind.config = {
       showToast("Wallpaper dihapus, klik Simpan");
     });
 
-    // Simpan Profil
     document.getElementById("save-profile").addEventListener("click", async () => {
       const btn = document.getElementById("save-profile");
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
       
-      // Upload Header File
       if (pendingHeaderFile && currentUser && storage) {
         try {
           const fileRef = storage.ref(`headers/${currentUser.uid}_${Date.now()}`);
@@ -2189,7 +2248,6 @@ tailwind.config = {
         }
       }
       
-      // Upload App File
       if (pendingAppFile && currentUser && storage) {
         try {
           const fileRef = storage.ref(`backgrounds/${currentUser.uid}_app_${Date.now()}`);
@@ -2272,416 +2330,358 @@ tailwind.config = {
   }
 
   /* =====================================================
-     ADD PAGE
+     ICON PICKER (BARU KATEGORI) - DIPERBARUI
      ===================================================== */
-  const EMOJI_LIST = [
-    // Umum
-    { twa:'twa-sun', bg:'bg-yellow-50', cat:'umum' },
-    { twa:'twa-crescent-moon', bg:'bg-indigo-50', cat:'umum' },
-    { twa:'twa-star', bg:'bg-amber-50', cat:'umum' },
-    { twa:'twa-sparkles', bg:'bg-blue-50', cat:'umum' },
-    { twa:'twa-fire', bg:'bg-orange-50', cat:'umum' },
-    { twa:'twa-droplet', bg:'bg-cyan-50', cat:'umum' },
-    { twa:'twa-red-heart', bg:'bg-rose-50', cat:'umum' },
-    { twa:'twa-smiling-face-with-smiling-eyes', bg:'bg-yellow-50', cat:'umum' },
-    { twa:'twa-direct-hit', bg:'bg-red-50', cat:'umum' },
-    { twa:'twa-rocket', bg:'bg-violet-50', cat:'umum' },
-    { twa:'twa-bell', bg:'bg-amber-50', cat:'umum' },
-    { twa:'twa-check-mark-button', bg:'bg-emerald-50', cat:'umum' },
-    { twa:'twa-alarm-clock', bg:'bg-sky-50', cat:'umum' },
-    { twa:'twa-glowing-star', bg:'bg-yellow-50', cat:'umum' },
-    
-    // Sehat
-    { twa:'twa-green-salad', bg:'bg-emerald-50', cat:'sehat' },
-    { twa:'twa-red-apple', bg:'bg-red-50', cat:'sehat' },
-    { twa:'twa-cup-with-straw', bg:'bg-cyan-50', cat:'sehat' },
-    { twa:'twa-pill', bg:'bg-sky-50', cat:'sehat' },
-    { twa:'twa-bed', bg:'bg-indigo-50', cat:'sehat' },
-    { twa:'twa-person-in-lotus-position', bg:'bg-teal-50', cat:'sehat' },
-    { twa:'twa-soap', bg:'bg-blue-50', cat:'sehat' },
-    { twa:'twa-toothbrush', bg:'bg-sky-50', cat:'sehat' },
-    { twa:'twa-carrot', bg:'bg-orange-50', cat:'sehat' },
-    { twa:'twa-teacup-without-handle', bg:'bg-emerald-50', cat:'sehat' },
-    { twa:'twa-potable-water', bg:'bg-cyan-50', cat:'sehat' },
-    { twa:'twa-lotion-bottle', bg:'bg-pink-50', cat:'sehat' },
-    
-    // Olahraga
-    { twa:'twa-runner', bg:'bg-orange-50', cat:'olahraga' },
-    { twa:'twa-pedestrian', bg:'bg-green-50', cat:'olahraga' },
-    { twa:'twa-bicycle', bg:'bg-blue-50', cat:'olahraga' },
-    { twa:'twa-swimmer', bg:'bg-cyan-50', cat:'olahraga' },
-    { twa:'twa-person-lifting-weights', bg:'bg-red-50', cat:'olahraga' },
-    { twa:'twa-soccer-ball', bg:'bg-slate-100', cat:'olahraga' },
-    { twa:'twa-basketball', bg:'bg-amber-50', cat:'olahraga' },
-    { twa:'twa-person-climbing', bg:'bg-lime-50', cat:'olahraga' },
-    { twa:'twa-person-cartwheeling', bg:'bg-teal-50', cat:'olahraga' },
-    { twa:'twa-boxing-glove', bg:'bg-rose-50', cat:'olahraga' },
-    { twa:'twa-skateboard', bg:'bg-violet-50', cat:'olahraga' },
-    { twa:'twa-tennis', bg:'bg-yellow-50', cat:'olahraga' },
-    
-    // Belajar
-    { twa:'twa-books', bg:'bg-blue-50', cat:'belajar' },
-    { twa:'twa-open-book', bg:'bg-indigo-50', cat:'belajar' },
-    { twa:'twa-memo', bg:'bg-fuchsia-50', cat:'belajar' },
-    { twa:'twa-writing-hand', bg:'bg-purple-50', cat:'belajar' },
-    { twa:'twa-brain', bg:'bg-purple-50', cat:'belajar' },
-    { twa:'twa-light-bulb', bg:'bg-yellow-50', cat:'belajar' },
-    { twa:'twa-graduation-cap', bg:'bg-slate-100', cat:'belajar' },
-    { twa:'twa-triangular-ruler', bg:'bg-sky-50', cat:'belajar' },
-    { twa:'twa-pen', bg:'bg-blue-50', cat:'belajar' },
-    { twa:'twa-notebook', bg:'bg-amber-50', cat:'belajar' },
-    { twa:'twa-input-latin-letters', bg:'bg-cyan-50', cat:'belajar' },
-    { twa:'twa-puzzle-piece', bg:'bg-lime-50', cat:'belajar' },
-    
-    // Rumah
-    { twa:'twa-house', bg:'bg-orange-50', cat:'rumah' },
-    { twa:'twa-broom', bg:'bg-lime-50', cat:'rumah' },
-    { twa:'twa-basket', bg:'bg-teal-50', cat:'rumah' },
-    { twa:'twa-shopping-cart', bg:'bg-emerald-50', cat:'rumah' },
-    { twa:'twa-cooking', bg:'bg-amber-50', cat:'rumah' },
-    { twa:'twa-sponge', bg:'bg-cyan-50', cat:'rumah' },
-    { twa:'twa-bucket', bg:'bg-blue-50', cat:'rumah' },
-    { twa:'twa-couch-and-lamp', bg:'bg-indigo-50', cat:'rumah' },
-    { twa:'twa-potted-plant', bg:'bg-green-50', cat:'rumah' },
-    { twa:'twa-wastebasket', bg:'bg-slate-100', cat:'rumah' },
-    { twa:'twa-wrench', bg:'bg-slate-100', cat:'rumah' },
-    { twa:'twa-ice-cube', bg:'bg-sky-50', cat:'rumah' },
-    
-    // Hobi
-    { twa:'twa-artist-palette', bg:'bg-pink-50', cat:'hobi' },
-    { twa:'twa-musical-note', bg:'bg-violet-50', cat:'hobi' },
-    { twa:'twa-headphone', bg:'bg-indigo-50', cat:'hobi' },
-    { twa:'twa-camera', bg:'bg-slate-100', cat:'hobi' },
-    { twa:'twa-guitar', bg:'bg-amber-50', cat:'hobi' },
-    { twa:'twa-video-game', bg:'bg-purple-50', cat:'hobi' },
-    { twa:'twa-clapper-board', bg:'bg-rose-50', cat:'hobi' },
-    { twa:'twa-magic-wand', bg:'bg-fuchsia-50', cat:'hobi' },
-    { twa:'twa-thread', bg:'bg-teal-50', cat:'hobi' },
-    { twa:'twa-performing-arts', bg:'bg-orange-50', cat:'hobi' },
-    { twa:'twa-camera-with-flash', bg:'bg-slate-100', cat:'hobi' },
-    { twa:'twa-musical-keyboard', bg:'bg-slate-100', cat:'hobi' },
-    
-    // Lainnya
-    { twa:'twa-folded-hands', bg:'bg-amber-50', cat:'lain' },
-    { twa:'twa-trophy', bg:'bg-yellow-50', cat:'lain' },
-    { twa:'twa-lock', bg:'bg-slate-100', cat:'lain' },
-    { twa:'twa-key', bg:'bg-amber-50', cat:'lain' },
-    { twa:'twa-wrapped-gift', bg:'bg-rose-50', cat:'lain' },
-    { twa:'twa-balloon', bg:'bg-red-50', cat:'lain' },
-    { twa:'twa-money-bag', bg:'bg-emerald-50', cat:'lain' },
-    { twa:'twa-world-map', bg:'bg-teal-50', cat:'lain' },
-    { twa:'twa-compass', bg:'bg-sky-50', cat:'lain' },
-    { twa:'twa-coin', bg:'bg-yellow-50', cat:'lain' },
-    { twa:'twa-briefcase', bg:'bg-slate-100', cat:'lain' },
-    { twa:'twa-desktop-computer', bg:'bg-blue-50', cat:'lain' }
+  const FA_ICON_CATEGORIES = [
+    {
+      title: "Keamanan",
+      icons: ["fa-shield-heart", "fa-kit-medical", "fa-briefcase-medical", "fa-syringe", "fa-virus", "fa-bottle-droplet", "fa-hands-bubbles", "fa-head-side-mask", "fa-people-arrows", "fa-ban-smoking", "fa-anchor", "fa-handshake-slash", "fa-medal", "fa-shield-virus"]
+    },
+    {
+      title: "Teknologi & alat",
+      icons: ["fa-border-all", "fa-ban", "fa-id-card", "fa-toolbox", "fa-certificate", "fa-circle-nodes", "fa-usb", "fa-shield-halved", "fa-rocket", "fa-bullhorn", "fa-address-card", "fa-trophy", "fa-chart-simple", "fa-user-group", "fa-people-group"]
+    },
+    {
+      title: "Anatomi & biologi",
+      icons: ["fa-brain", "fa-bone", "fa-tooth", "fa-link", "fa-dumbbell", "fa-joint", "fa-dna", "fa-lungs", "fa-bacteria", "fa-virus", "fa-egg", "fa-droplet", "fa-eye", "fa-child-reaching", "fa-heart-pulse"]
+    },
+    {
+      title: "Lain-lain",
+      icons: ["fa-house", "fa-house-chimney-window", "fa-bullhorn", "fa-hand-holding-heart", "fa-ticket", "fa-globe", "fa-share-nodes", "fa-star", "fa-heart", "fa-check", "fa-box", "fa-gift"]
+    },
+    {
+      title: "Lingkungan & alam",
+      icons: ["fa-water", "fa-glass-water", "fa-glass-water-droplet", "fa-droplet", "fa-cloud-showers-heavy", "fa-sun", "fa-cloud-sun", "fa-moon", "fa-wind", "fa-cloud", "fa-cloud-bolt", "fa-tornado", "fa-hurricane", "fa-snowflake", "fa-smog", "fa-earth-americas", "fa-volcano", "fa-leaf", "fa-tree", "fa-seedling", "fa-wheelbarrow", "fa-recycle", "fa-earth-asia", "fa-house-flood-water", "fa-mountain"]
+    },
+    {
+      title: "Sosial & komunitas",
+      icons: ["fa-user", "fa-users", "fa-user-plus", "fa-user-minus", "fa-user-xmark", "fa-user-check", "fa-user-tie", "fa-user-shield", "fa-user-group", "fa-user-gear", "fa-person-praying", "fa-handshake", "fa-face-smile", "fa-face-frown", "fa-face-angry", "fa-face-tired", "fa-face-laugh", "fa-face-meh", "fa-thumbs-up", "fa-thumbs-down", "fa-mars", "fa-venus", "fa-transgender", "fa-neuter", "fa-venus-mars", "fa-person-cane", "fa-person-hiking", "fa-wheelchair", "fa-arrows-left-right", "fa-hand"]
+    },
+    {
+      title: "Pendidikan & pekerjaan",
+      icons: ["fa-graduation-cap", "fa-briefcase", "fa-clipboard", "fa-clipboard-list", "fa-barcode", "fa-chart-bar", "fa-user-gear", "fa-screwdriver-wrench", "fa-compass-drafting", "fa-flask", "fa-filter", "fa-brain", "fa-head-side-virus", "fa-seedling", "fa-vial", "fa-list-check", "fa-stethoscope", "fa-tooth", "fa-baby", "fa-ear-listen"]
+    },
+    {
+      title: "Hiburan & rekreasi",
+      icons: ["fa-cake-candles", "fa-film", "fa-ticket", "fa-car", "fa-puzzle-piece", "fa-fan", "fa-palette", "fa-crown", "fa-calendar-days", "fa-chart-simple", "fa-trophy", "fa-mug-hot", "fa-building", "fa-heart-crack", "fa-music"]
+    },
+    {
+      title: "Olahraga & luar ruangan",
+      icons: ["fa-gamepad", "fa-futbol", "fa-person-hiking", "fa-flag-checkered", "fa-basketball", "fa-water", "fa-person-skiing", "fa-people-arrows", "fa-baseball", "fa-campground", "fa-bicycle", "fa-shower", "fa-person-running", "fa-trophy", "fa-hockey-puck", "fa-volleyball", "fa-shoe-prints", "fa-person-swimming", "fa-bowling-ball", "fa-hand-fist", "fa-horse", "fa-football", "fa-snowplow", "fa-dumbbell", "fa-snowflake"]
+    },
+    {
+      title: "Kesehatan & kebugaran",
+      icons: ["fa-heart-pulse", "fa-kit-medical", "fa-stethoscope", "fa-brain", "fa-dumbbell", "fa-spa", "fa-bottle-droplet", "fa-heart-crack", "fa-stopwatch", "fa-chart-pie", "fa-shoe-prints", "fa-hand-holding-heart", "fa-tooth", "fa-lungs", "fa-arrow-up", "fa-arrow-down", "fa-wave-square", "fa-heart", "fa-bag-shopping", "fa-syringe", "fa-face-smile", "fa-child", "fa-moon", "fa-clock", "fa-glass-water"]
+    }
   ];
 
-  const EMOJI_CATS = [
-    { id:'all', label:'Semua' },
-    { id:'umum', label:'Umum' },
-    { id:'sehat', label:'Sehat' },
-    { id:'olahraga', label:'Olahraga' },
-    { id:'belajar', label:'Belajar' },
-    { id:'rumah', label:'Rumah' },
-    { id:'hobi', label:'Hobi' },
-    { id:'lain', label:'Lainnya' }
-  ];
+  let selectedIconClass = "fa-solid fa-sun"; 
 
-  const FREQ_LABEL = { daily: 'Setiap Hari', workday: 'Hari Kerja', custom: 'Kustom' };
-
-  let selectedEmoji = EMOJI_LIST[0];
-  let selectedFreq  = 'daily';
-  let selectedTimeType = 'alarm';
-  let selectedDays  = new Set(ALL_DAYS);
-  let emojiCat      = 'all';
-
-  const iconPreview       = document.getElementById('icon-preview');
-  const iconPreviewEmoji  = document.getElementById('icon-preview-emoji');
-  const iconPicker        = document.getElementById('icon-picker');
-  const iconPickerGrid    = document.getElementById('icon-picker-grid');
-  const emojiTabsEl       = document.getElementById('emoji-tabs');
-  const btnChangeIcon     = document.getElementById('btn-change-icon');
-  const frequencyGroup    = document.getElementById('frequency-group');
-  const customDaysPanel   = document.getElementById('custom-days-panel');
-  const dayPickerEl       = document.getElementById('day-picker');
-  const customDaysHint    = document.getElementById('custom-days-hint');
-  const addHabitForm      = document.getElementById('add-habit-form');
-  const habitNameInput    = document.getElementById('habit-name');
-  const habitTimeInput    = document.getElementById('habit-time');
-  const reminderSwitch    = document.getElementById('reminder-switch');
-  const reminderNote      = document.getElementById('reminder-note');
-  const rtGroup           = document.getElementById('reminder-type-group');
-  const timeWrapper       = document.getElementById('time-input-wrapper');
-  const reminderLabel     = document.getElementById('reminder-label');
-  const reminderDesc      = document.getElementById('reminder-desc');
-
-  function renderEmojiTabs() {
-    emojiTabsEl.innerHTML = EMOJI_CATS.map(c => `
-      <button type="button" data-cat="${c.id}"
-        class="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition ${
-          c.id === emojiCat ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 active:scale-95'
-        }">${c.label}</button>
-    `).join('');
+  function renderIconPickerGrid() {
+    const container = document.getElementById("icon-picker-content");
+    if (!container) return;
+    
+    let html = "";
+    FA_ICON_CATEGORIES.forEach(cat => {
+      html += `<div class="mb-6">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 ml-1">${cat.title}</h3>
+          <div class="grid grid-cols-5 gap-3">`;
+      
+      cat.icons.forEach(icon => {
+        const fullClass = `fa-solid ${icon}`;
+        const isSelected = selectedIconClass === fullClass;
+        html += `
+            <button type="button" onclick="selectIcon('${fullClass}')"
+                class="icon-btn w-full aspect-square rounded-xl bg-white flex items-center justify-center ${isSelected ? 'selected' : ''}">
+                <i class="${fullClass}"></i>
+            </button>
+        `;
+      });
+      
+      html += `</div></div>`;
+    });
+    container.innerHTML = html;
   }
 
-  function renderEmojiGrid() {
-    const list = EMOJI_LIST.map((e, i) => ({ e, i }))
-      .filter(x => emojiCat === 'all' || x.e.cat === emojiCat);
-    iconPickerGrid.innerHTML = list.map(({ e, i }) => `
-      <button type="button" data-emoji="${i}" aria-label="Pilih ikon"
-        class="emoji-opt w-10 h-10 rounded-lg ${e.bg} flex items-center justify-center active:scale-90 transition-transform">
-        <i class="twa ${e.twa} text-2xl"></i>
+  // Global function for selecting icon
+  window.selectIcon = function(iconClass) {
+    selectedIconClass = iconClass;
+    renderIconPickerGrid(); 
+  }
+
+  // Open picker
+  document.getElementById("btn-change-icon").addEventListener("click", () => {
+    const currentIcon = document.getElementById("habit-icon").value;
+    if (currentIcon) selectedIconClass = currentIcon;
+    
+    document.getElementById("page-icon-picker").classList.remove("hidden");
+    document.body.classList.add("hide-nav");
+    renderIconPickerGrid();
+  });
+
+  document.getElementById("icon-preview").addEventListener("click", () => {
+    document.getElementById("btn-change-icon").click();
+  });
+
+  // Close picker (Back)
+  document.getElementById("icon-picker-back").addEventListener("click", () => {
+    document.getElementById("page-icon-picker").classList.add("hidden");
+    document.body.classList.remove("hide-nav");
+  });
+
+  // Save picker (Buat)
+  document.getElementById("icon-picker-save").addEventListener("click", () => {
+    document.getElementById("page-icon-picker").classList.add("hidden");
+    document.body.classList.remove("hide-nav");
+    
+    document.getElementById("habit-icon").value = selectedIconClass;
+    
+    // Ambil warna saat ini dari hidden input
+    const currentColor = document.getElementById("habit-icon-color").value;
+    document.getElementById("icon-preview-emoji").innerHTML = `<i class="${selectedIconClass} text-4xl ${currentColor}"></i>`;
+  });
+
+  /* =====================================================
+     COLOR PICKER (WARNA IKON)
+     ===================================================== */
+  const ICON_COLORS = [
+    { text: 'text-slate-800', bg: 'bg-slate-100', border: 'border-slate-300' }, // Default
+    { text: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { text: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    { text: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { text: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200' },
+    { text: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+    { text: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  ];
+
+  let selectedIconColor = 'text-amber-500';
+  let selectedIconBg = 'bg-amber-50';
+  let selectedIconBorder = 'border-amber-200';
+
+  function renderColorPicker() {
+    const container = document.getElementById("icon-color-picker");
+    if (!container) return;
+    
+    container.innerHTML = ICON_COLORS.map(c => `
+      <button type="button" onclick="selectIconColor('${c.text}', '${c.bg}', '${c.border}')" 
+              class="color-btn ${c.bg} ${selectedIconColor === c.text ? 'selected' : ''}">
+        <i class="fa-solid fa-circle ${c.text} text-[10px]"></i>
       </button>
-    `).join('');
+    `).join("");
   }
 
-  emojiTabsEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-cat]');
-    if (!btn) return;
-    emojiCat = btn.dataset.cat;
-    renderEmojiTabs();
-    renderEmojiGrid();
-  });
-
-  iconPickerGrid.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-emoji]');
-    if (!btn) return;
-    applyEmojiChoice(EMOJI_LIST[Number(btn.dataset.emoji)]);
-    iconPicker.classList.add('hidden');
-  });
-
-  function applyEmojiChoice(choice) {
-    selectedEmoji = choice;
-    iconPreviewEmoji.innerHTML = `<i class="twa ${choice.twa} text-5xl"></i>`;
-    iconPreview.className = `relative w-24 h-24 rounded-3xl ${choice.bg} border border-blue-200 flex items-center justify-center shadow-inner active:scale-95 transition-all`;
-  }
-
-  function togglePicker() { iconPicker.classList.toggle('hidden'); }
-  btnChangeIcon.addEventListener('click', togglePicker);
-  iconPreview.addEventListener('click', togglePicker);
-
-  dayPickerEl.innerHTML = DAYS.map(d => `
-    <button type="button" data-day="${d.v}" class="day-chip">${d.short}</button>
-  `).join('');
-
-  function updateDaysHint() {
-    const n = selectedDays.size;
-    if (n === 0) {
-      customDaysHint.textContent = 'Belum dipilih';
-      customDaysHint.className = 'text-[10px] font-semibold text-rose-500';
-    } else if (n === 7) {
-      customDaysHint.textContent = 'Setiap hari';
-      customDaysHint.className = 'text-[10px] font-semibold text-blue-600';
-    } else {
-      customDaysHint.textContent = `${n} hari dipilih`;
-      customDaysHint.className = 'text-[10px] font-semibold text-blue-600';
-    }
-  }
-
-  function renderDayPicker() {
-    [...dayPickerEl.children].forEach(btn => {
-      const isOn = selectedDays.has(Number(btn.dataset.day));
-      btn.classList.toggle('day-chip-active', isOn);
-      btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
-    });
-    updateDaysHint();
-  }
-
-  dayPickerEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-day]');
-    if (!btn) return;
-    const v = Number(btn.dataset.day);
-    if (selectedDays.has(v)) selectedDays.delete(v);
-    else selectedDays.add(v);
-    renderDayPicker();
-  });
-
-  document.getElementById('day-select-all').addEventListener('click', () => {
-    selectedDays = new Set(ALL_DAYS); renderDayPicker();
-  });
-  document.getElementById('day-select-workday').addEventListener('click', () => {
-    selectedDays = new Set(WORK_DAYS); renderDayPicker();
-  });
-  document.getElementById('day-clear-all').addEventListener('click', () => {
-    selectedDays = new Set(); renderDayPicker();
-  });
-
-  function setFrequency(freq, syncDays) {
-    if (!FREQ_LABEL[freq]) freq = 'daily';
-    selectedFreq = freq;
-    frequencyGroup.querySelectorAll('.freq-btn').forEach(b => {
-      const on = b.dataset.freq === freq;
-      b.classList.toggle('bg-white', on);
-      b.classList.toggle('text-blue-600', on);
-      b.classList.toggle('shadow-sm', on);
-      b.classList.toggle('font-semibold', on);
-      b.classList.toggle('text-slate-600', !on);
-      b.classList.toggle('font-medium', !on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-    customDaysPanel.classList.toggle('hidden', freq !== 'custom');
-    if (syncDays) {
-      if (freq === 'daily')        selectedDays = new Set(ALL_DAYS);
-      else if (freq === 'workday') selectedDays = new Set(WORK_DAYS);
-      else if (selectedDays.size === 0) selectedDays = new Set(ALL_DAYS);
-    }
-    renderDayPicker();
-  }
-
-  frequencyGroup.addEventListener('click', (e) => {
-    const btn = e.target.closest('.freq-btn');
-    if (!btn) return;
-    setFrequency(btn.dataset.freq, true);
-  });
-
-  /* TIPE PENGINGAT (ALARM / TANPA JAM) */
-  function setTimeType(type) {
-    selectedTimeType = type;
-    rtGroup.querySelectorAll('.rt-btn').forEach(b => {
-      const on = b.dataset.type === type;
-      b.classList.toggle('bg-white', on);
-      b.classList.toggle('text-blue-600', on);
-      b.classList.toggle('shadow-sm', on);
-      b.classList.toggle('font-semibold', on);
-      b.classList.toggle('text-slate-600', !on);
-      b.classList.toggle('font-medium', !on);
-    });
-    timeWrapper.classList.toggle('hidden', type === 'anytime');
+  window.selectIconColor = function(textClass, bgClass, borderClass) {
+    selectedIconColor = textClass;
+    selectedIconBg = bgClass;
+    selectedIconBorder = borderClass;
     
-    if (type === 'anytime') {
-      reminderLabel.textContent = "Catatan";
-      reminderDesc.textContent = "Tampilkan catatan di halaman ini";
-    } else {
-      reminderLabel.textContent = "Pengingat";
-      reminderDesc.textContent = "Dapatkan notifikasi pengingat";
-    }
+    renderColorPicker();
+    
+    // Update preview background
+    document.getElementById("icon-preview").className = `relative w-24 h-24 rounded-3xl ${bgClass} border ${borderClass} flex items-center justify-center shadow-inner active:scale-95 transition-all`;
+    
+    // Update preview icon
+    const currentIcon = document.getElementById("habit-icon").value;
+    document.getElementById("icon-preview-emoji").innerHTML = `<i class="${currentIcon} text-4xl ${textClass}"></i>`;
+    
+    // Update hidden input
+    document.getElementById("habit-icon-bg").value = bgClass;
+    document.getElementById("habit-icon-color").value = textClass;
   }
 
-  rtGroup.addEventListener('click', (e) => {
-    const btn = e.target.closest('.rt-btn');
-    if (!btn) return;
-    setTimeType(btn.dataset.type);
+  // Initialize color picker
+  renderColorPicker();
+
+  /* =====================================================
+     FORM SUBMIT (ADD HABIT)
+     ===================================================== */
+  // Setup frequency buttons
+  let selectedFreq = "daily";
+  let selectedDays = new Set([1,2,3,4,5,6,0]);
+  
+  const freqBtns = document.querySelectorAll(".freq-btn");
+  const customDaysPanel = document.getElementById("custom-days-panel");
+  const dayPicker = document.getElementById("day-picker");
+
+  // Render day chips
+  DAYS.forEach(d => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `day-chip ${selectedDays.has(d.v) ? 'day-chip-active' : ''}`;
+    btn.textContent = d.short;
+    btn.onclick = () => {
+      if (selectedDays.has(d.v)) selectedDays.delete(d.v);
+      else selectedDays.add(d.v);
+      btn.classList.toggle("day-chip-active");
+      updateFreqHint();
+    };
+    dayPicker.appendChild(btn);
   });
 
-  function resolveDays() {
-    if (selectedFreq === 'daily')   return [...ALL_DAYS];
-    if (selectedFreq === 'workday') return [...WORK_DAYS];
-    return [...selectedDays].sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
+  function updateFreqHint() {
+    document.getElementById("custom-days-hint").textContent = `${selectedDays.size} hari dipilih`;
   }
 
-  function buildSubtitle(timeStr, freq, days, type) {
-    let freqStr = "";
-    if (freq === 'custom') {
-      const shorts = DAY_ORDER.filter(v => days.includes(v))
-        .map(v => DAYS.find(d => d.v === v).short);
-      freqStr = shorts.join(', ');
-    } else {
-      freqStr = FREQ_LABEL[freq];
-    }
-
-    if (type === 'anytime' || !timeStr) {
-      return `Tanpa Jam · ${freqStr}`;
-    }
-    return `${timeStr} · ${freqStr}`;
-  }
-
-  function generateId() {
-    return 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-  }
-
-  function resetAddForm() {
-    applyEmojiChoice(EMOJI_LIST[0]);
-    iconPicker.classList.add('hidden');
-    emojiCat = 'all';
-    renderEmojiTabs();
-    renderEmojiGrid();
-    habitNameInput.value = '';
-    habitTimeInput.value = '07:00';
-    reminderSwitch.checked = true;
-    reminderNote.value = '';
-    selectedDays = new Set(ALL_DAYS);
-    setFrequency('daily', true);
-    setTimeType('alarm');
-  }
-
-  function showToast(msg) {
-    const t = document.createElement('div');
-    t.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[300] bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 max-w-[90%] text-center';
-    t.style.animation = 'page-fade-in 0.3s ease-out';
-    t.innerHTML = msg;
-    document.body.appendChild(t);
-    setTimeout(() => {
-      t.style.transition = 'opacity 0.3s';
-      t.style.opacity = '0';
-      setTimeout(() => t.remove(), 300);
-    }, 1600);
-  }
-
-  addHabitForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = habitNameInput.value.trim();
-    if (!name) {
-      habitNameInput.focus();
-      habitNameInput.animate(
-        [{transform:'translateX(0)'},{transform:'translateX(-6px)'},
-         {transform:'translateX(6px)'},{transform:'translateX(-4px)'},
-         {transform:'translateX(4px)'},{transform:'translateX(0)'}],
-        {duration:400}
-      );
-      return;
-    }
-    const days = resolveDays();
-    if (selectedFreq === 'custom' && days.length === 0) {
-      showToast('Pilih minimal satu hari dulu ya');
-      customDaysPanel.classList.remove('hidden');
-      return;
-    }
-    const timeStr  = selectedTimeType === 'alarm' ? (habitTimeInput.value || '07:00') : null;
-    const subtitle = buildSubtitle(timeStr, selectedFreq, days, selectedTimeType);
-    state.habits.push({
-      id: generateId(),
-      title: name,
-      subtitle,
-      twa: selectedEmoji.twa,
-      bg: selectedEmoji.bg,
-      done: false,
-      time: timeStr,
-      frequency: selectedFreq,
-      days,
-      reminder: reminderSwitch.checked,
-      note: reminderNote.value.trim(),
-      history: {},
-      createdAt: dateKey(new Date())
+  freqBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      freqBtns.forEach(b => {
+        b.className = "freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+      });
+      btn.className = "freq-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all";
+      selectedFreq = btn.dataset.freq;
+      
+      if (selectedFreq === "custom") {
+        customDaysPanel.classList.remove("hidden");
+      } else {
+        customDaysPanel.classList.add("hidden");
+        if (selectedFreq === "daily") selectedDays = new Set([1,2,3,4,5,6,0]);
+        if (selectedFreq === "workday") selectedDays = new Set([1,2,3,4,5]);
+        
+        // update chip visuals
+        const chips = dayPicker.querySelectorAll(".day-chip");
+        chips.forEach((c, i) => {
+          const dayVal = DAYS[i].v;
+          if (selectedDays.has(dayVal)) c.classList.add("day-chip-active");
+          else c.classList.remove("day-chip-active");
+        });
+        updateFreqHint();
+      }
     });
-    if (!state.user.name) state.user.name = "Pengguna";
-    if (state.habits.length >= 1 && (!state.user.tier || state.user.tier === "Pengguna Baru")) {
-      state.user.tier = "Pejuang Habit";
-    }
+  });
+
+  document.getElementById("day-select-all").onclick = () => {
+    selectedDays = new Set([1,2,3,4,5,6,0]);
+    dayPicker.querySelectorAll(".day-chip").forEach(c => c.classList.add("day-chip-active"));
+    updateFreqHint();
+  };
+  document.getElementById("day-select-workday").onclick = () => {
+    selectedDays = new Set([1,2,3,4,5]);
+    dayPicker.querySelectorAll(".day-chip").forEach((c, i) => {
+      if (selectedDays.has(DAYS[i].v)) c.classList.add("day-chip-active");
+      else c.classList.remove("day-chip-active");
+    });
+    updateFreqHint();
+  };
+  document.getElementById("day-clear-all").onclick = () => {
+    selectedDays.clear();
+    dayPicker.querySelectorAll(".day-chip").forEach(c => c.classList.remove("day-chip-active"));
+    updateFreqHint();
+  };
+
+  // Reminder Type Toggle
+  let selectedReminderType = "alarm";
+  const rtBtns = document.querySelectorAll(".rt-btn");
+  const timeInputWrapper = document.getElementById("time-input-wrapper");
+
+  rtBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      rtBtns.forEach(b => {
+        b.className = "rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+      });
+      btn.className = "rt-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all";
+      selectedReminderType = btn.dataset.type;
+      
+      if (selectedReminderType === "anytime") {
+        timeInputWrapper.classList.add("hidden");
+      } else {
+        timeInputWrapper.classList.remove("hidden");
+      }
+    });
+  });
+
+  // Submit Form
+  document.getElementById("add-habit-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById("habit-name").value.trim();
+    if (!title) { showToast("Nama habit wajib diisi"); return; }
+    
+    const iconClass = document.getElementById("habit-icon").value || "fa-solid fa-sun";
+    const bgColor = document.getElementById("habit-icon-bg").value || "bg-amber-50";
+    const iconColor = document.getElementById("habit-icon-color").value || "text-amber-500";
+    const time = selectedReminderType === "alarm" ? document.getElementById("habit-time").value : null;
+    const reminder = document.getElementById("reminder-switch").checked;
+    const note = document.getElementById("reminder-note").value.trim();
+    const daysArr = Array.from(selectedDays);
+    
+    if (daysArr.length === 0) { showToast("Pilih minimal satu hari"); return; }
+
+    const newHabit = {
+      id: Date.now().toString(),
+      title: title,
+      subtitle: time ? `Setiap hari, ${time}` : "Bisa dilakukan kapan saja",
+      twa: iconClass, 
+      bg: bgColor,
+      iconColor: iconColor, // Simpan warna ikon
+      time: time,
+      reminder: reminder,
+      note: note,
+      days: daysArr,
+      createdAt: new Date().toISOString(),
+      history: {}
+    };
+
+    state.habits.push(newHabit);
     recomputeGlobalStats();
     save();
-    resetAddForm();
-    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-    showToast('Habit berhasil ditambahkan ✨');
-    showPage('home');
+    
+    // Reset Form
+    document.getElementById("add-habit-form").reset();
+    document.getElementById("habit-icon").value = "fa-solid fa-sun";
+    document.getElementById("habit-icon-bg").value = "bg-amber-50";
+    document.getElementById("habit-icon-color").value = "text-amber-500";
+    document.getElementById("icon-preview-emoji").innerHTML = `<i class="fa-solid fa-sun text-4xl text-amber-500"></i>`;
+    
+    // Reset Color Picker
+    selectedIconColor = 'text-amber-500';
+    selectedIconBg = 'bg-amber-50';
+    selectedIconBorder = 'border-amber-200';
+    renderColorPicker();
+    document.getElementById("icon-preview").className = "relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all";
+
+    selectedDays = new Set([1,2,3,4,5,6,0]);
+    customDaysPanel.classList.add("hidden");
+    freqBtns[0].click(); // reset to daily
+    
+    showToast("Habit berhasil ditambahkan ✨");
+    showPage("home");
   });
+
+  /* =====================================================
+     TOAST NOTIFICATION
+     ===================================================== */
+  function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "fixed top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-[400] transition-all duration-300 opacity-0 -translate-y-4";
+    toast.innerHTML = msg;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.remove("opacity-0", "-translate-y-4");
+    }, 10);
+    
+    setTimeout(() => {
+      toast.classList.add("opacity-0", "-translate-y-4");
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  }
 
   /* =====================================================
      INIT
      ===================================================== */
   load();
-  applyDark(!!state.user.darkMode);
-  recomputeGlobalStats();
-  renderEmojiTabs();
-  renderEmojiGrid();
-  setFrequency('daily', true);
-  setTimeType('alarm');
-  setupMidnightReset();
+  if (state.user.darkMode) applyDark(true);
   startReminderLoop();
-
-  window.HabitApp = { state, showPage, renderHome, renderProfile, renderStats, renderDetail, openDetail, save, load };
-  const initial = (location.hash || "#home").replace("#", "");
-  showPage(VALID.includes(initial) ? initial : "home");
+  setupMidnightReset();
+  renderHome();
+  renderNav("home");
+  
+  // Handle URL Hash for direct navigation
+  const hash = window.location.hash.replace("#", "");
+  if (VALID.includes(hash)) {
+    showPage(hash);
+  }
 })();
 </script>
 </body>
-</html>
+  </html>
