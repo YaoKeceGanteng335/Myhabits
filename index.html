@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
 tailwind.config = {
+  darkMode: 'class',
   theme: { extend: {
     colors: { brand:{50:'#eef6ff',100:'#d9ecff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af'} },
     fontFamily: { sans:['-apple-system','BlinkMacSystemFont','"SF Pro Text"','"SF Pro Display"','Segoe UI','Roboto','Helvetica','Arial','sans-serif'] }
@@ -27,11 +28,10 @@ tailwind.config = {
 
 <style>
   * { -webkit-tap-highlight-color: transparent; }
-  body { touch-action: manipulation; user-select: none; }
+  body { touch-action: manipulation; user-select: none; transition: background 0.3s ease; }
   .glass-pill { background: rgba(83, 93, 112, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
   .hero-sky-bg { background: linear-gradient(180deg, #1b539c 0%, #3075c7 45%, #60a5fa 78%, #ebf4ff 100%); }
   
-  /* Style untuk custom background */
   .header-custom-bg {
     background-size: cover !important;
     background-position: center !important;
@@ -142,15 +142,38 @@ tailwind.config = {
 
   /* ============ DARK MODE ============ */
   html.dark body { background:#0b1220; }
-  html.dark main { background:#0f172a !important; }
+  html.dark main:not([style*="background-image"]) { background:#0f172a !important; }
+  html.dark body:not([style*="background-image"]) { background:#0b1220 !important; }
+  html.dark .hero-sky-bg {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  }
+  html.dark .glass-pill {
+      background: rgba(15, 23, 42, 0.92);
+      border-color: rgba(51, 65, 85, 0.5);
+  }
+
+  /* FIX: background putih + varian transparan */
   html.dark .bg-white,
-  html.dark .bg-white\/95 { background-color:#1e293b !important; }
+  html.dark .bg-white\/95,
+  html.dark .bg-white\/90,
+  html.dark .bg-white\/80,
+  html.dark .bg-white\/70 {
+      background-color: rgba(30, 41, 59, 0.92) !important;
+  }
+  
+  html.dark .bg-\[\#F6F8FC\] { background-color: #0f172a !important; }
+  html.dark .bg-\[\#F4F7FC\] { background-color: #0b1220 !important; }
+  
   html.dark .text-slate-900,
   html.dark .text-slate-800,
-  html.dark .text-slate-700 { color:#e2e8f0 !important; }
-  html.dark .text-slate-600 { color:#cbd5e1 !important; }
+  html.dark .text-slate-700 { color:#f8fafc !important; }
+  html.dark .text-slate-600 { color:#e2e8f0 !important; }
   html.dark .text-slate-500,
-  html.dark .text-slate-400 { color:#94a3b8 !important; }
+  html.dark .text-slate-400 { color:#cbd5e1 !important; }
+  
+  html.dark .text-blue-700 { color: #93c5fd !important; }
+  html.dark .text-blue-600 { color: #93c5fd !important; }
+
   html.dark .bg-slate-100,
   html.dark .bg-slate-50,
   html.dark .bg-blue-50,
@@ -170,21 +193,46 @@ tailwind.config = {
   html.dark .bg-teal-50,
   html.dark .bg-lime-50,
   html.dark .bg-green-50 { background-color:#243044 !important; }
+
+  html.dark .bg-slate-200 { background-color:#334155 !important; }
   html.dark .bg-slate-200\/70 { background-color:#1b2536 !important; }
+
   html.dark .border-slate-100,
   html.dark .border-slate-200,
-  html.dark .border-slate-200\/80 { border-color:#293548 !important; }
-  html.dark .divide-y > * + * { border-color:#293548 !important; }
+  html.dark .border-slate-200\/80 { border-color:#334155 !important; }
+  html.dark .divide-y > * + * { border-color:#334155 !important; }
   html.dark input,
   html.dark textarea { background-color:#1e293b !important; color:#e2e8f0 !important; border-color:#334155 !important; }
   html.dark input::placeholder,
   html.dark textarea::placeholder { color:#64748b !important; }
-  html.dark .day-chip { background:#243044; color:#94a3b8; }
+  html.dark .day-chip { background:#243044; color:#cbd5e1; }
   html.dark .day-chip.day-chip-active { background:#2563eb; color:#fff; }
   html.dark .sky-gradient { background: linear-gradient(180deg,#0b1220 0%,#0f172a 55%,#111c2e 100%); }
   html.dark .bg-blue-50\/70 { background-color:#1e3a5f !important; }
 
-  /* ============ ICON PICKER BARU ============ */
+  html.dark #achievement-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  html.dark #achievement-card p { color: #cbd5e1 !important; }
+  html.dark #achievement-card .font-bold { color: #ffffff !important; }
+
+  html.dark #page-icon-picker { background-color: #0f172a !important; }
+  html.dark #page-icon-picker nav {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  html.dark .icon-btn {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  html.dark .icon-btn i { color: #e2e8f0 !important; }
+  html.dark .icon-btn.selected {
+    border-color: #93c5fd !important;
+    background-color: #243044 !important;
+  }
+
+  /* ============ ICON PICKER ============ */
   #page-icon-picker { background-color: #ffffff; }
   .icon-btn {
       transition: all 0.2s ease;
@@ -220,11 +268,8 @@ tailwind.config = {
 
   <!-- ==================== PAGE: HOME ==================== -->
   <section id="page-home" class="page flex-1 flex flex-col">
-    <!-- Header dengan ID untuk manipulasi background -->
     <header id="home-header" class="relative hero-sky-bg pb-6 px-5 rounded-b-[36px] shadow-sm overflow-hidden text-white pt-5 transition-all duration-300 z-10">
-      
       <div id="header-overlay" class="hidden absolute inset-0 header-overlay pointer-events-none z-0"></div>
-
       <div aria-hidden="true" class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden z-0">
         <div class="absolute -top-10 -right-10 w-48 h-48 bg-white/40 rounded-full blur-2xl"></div>
         <svg class="absolute bottom-0 right-[-10px] w-52 h-44 text-blue-950 fill-current opacity-30" preserveAspectRatio="none" viewBox="0 0 100 100">
@@ -233,7 +278,6 @@ tailwind.config = {
         <div class="absolute top-16 left-8 text-xl opacity-60">✦</div>
         <div class="absolute top-28 right-16 opacity-75"><i class="twa twa-sparkles text-xs"></i></div>
       </div>
-      
       <div class="flex justify-between items-center mt-2 relative z-10">
         <div>
           <div class="flex items-center space-x-1.5">
@@ -242,13 +286,11 @@ tailwind.config = {
           </div>
           <p class="text-xs text-white/90 font-medium mt-0.5 drop-shadow-md">Bangun kebiasaan, raih versi terbaikmu!</p>
         </div>
-        
         <button id="btn-notif" aria-label="Notifikasi" class="relative w-10 h-10 rounded-full bg-white text-blue-600 shadow-md border border-slate-100 flex items-center justify-center active:scale-95 transition-transform z-10" type="button">
           <i class="fa-regular fa-bell text-lg"></i>
           <span id="notif-dot" class="hidden absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
         </button>
       </div>
-      
       <div class="flex items-center space-x-3.5 mt-5 mb-2 relative z-10">
         <div class="relative">
           <div class="w-[62px] h-[62px] rounded-full ring-2 ring-white/90 overflow-hidden shadow-lg bg-slate-700 flex items-center justify-center text-white" id="banner-avatar">
@@ -283,7 +325,6 @@ tailwind.config = {
             </div>
           </div>
         </div>
-        
         <div class="bg-white rounded-2xl p-3.5 flex items-center space-x-3 shadow-md shadow-slate-200/60 border border-slate-100">
           <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0 shadow-inner">
             <i class="twa twa-trophy text-2xl"></i>
@@ -310,10 +351,7 @@ tailwind.config = {
           <i class="fa-solid fa-chevron-right text-[10px]"></i>
         </a>
       </div>
-      
-      <!-- Container Habit (Sortable) -->
       <div id="habit-checklist-group" class="space-y-3"></div>
-
       <div id="habit-empty-state">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-2">
           <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -329,7 +367,6 @@ tailwind.config = {
           </button>
         </div>
       </div>
-
       <div id="habit-none-today" class="hidden">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-2">
           <div class="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500">
@@ -345,18 +382,18 @@ tailwind.config = {
   </section>
 
   <!-- ==================== PAGE: STATISTIK ==================== -->
-  <section id="page-stats" class="page hidden flex-1 flex-col z-10">
-    <nav class="px-6 py-3 flex items-center justify-between">
+  <section id="page-stats" class="page hidden flex-1 flex-col z-10 pb-24 overflow-y-auto bg-[#F6F8FC]">
+    <nav class="px-6 py-3 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-20 border-b border-slate-100">
       <button aria-label="Kembali" data-goto="home" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
         <i class="fa-solid fa-chevron-left text-base"></i>
       </button>
-      <h1 class="text-lg font-bold text-slate-800 tracking-tight text-center flex-1 pr-1 drop-shadow-sm">Riwayat Habit</h1>
-      <button aria-label="Pilih Tanggal" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-200/50 active:scale-95 transition" type="button">
-        <i class="fa-regular fa-calendar text-base"></i>
-      </button>
+      <h1 class="text-lg font-bold text-slate-800 tracking-tight">Statistik</h1>
+      <div class="w-8"></div>
     </nav>
 
-    <main class="px-5 pt-1 pb-4 flex-1 flex flex-col">
+    <main class="px-5 pt-4 flex flex-col space-y-5">
+      
+      <!-- 1. KALENDER -->
       <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
         <div class="flex items-center justify-between mb-5 px-1">
           <button id="cal-prev" aria-label="Bulan sebelumnya" class="p-2 -m-2 text-slate-600 hover:text-slate-900 active:scale-90 transition" type="button">
@@ -367,7 +404,6 @@ tailwind.config = {
             <i class="fa-solid fa-chevron-right text-sm"></i>
           </button>
         </div>
-
         <div class="grid grid-cols-7 text-center mb-3">
           <span class="text-xs font-semibold text-slate-500">Sen</span>
           <span class="text-xs font-semibold text-slate-500">Sel</span>
@@ -377,31 +413,72 @@ tailwind.config = {
           <span class="text-xs font-semibold text-slate-500">Sab</span>
           <span class="text-xs font-semibold text-slate-500">Min</span>
         </div>
-
         <div id="cal-days" class="grid grid-cols-7 gap-y-3.5 text-center items-center text-sm font-medium"></div>
       </div>
 
-      <section id="achievement-card" class="hidden mt-4 bg-gradient-to-r from-[#eef6ff] via-[#f2f8fe] to-[#eff4fe] rounded-2xl p-4 flex items-center space-x-3.5 border border-blue-100/60 shadow-sm relative overflow-hidden">
-        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center filter drop-shadow-sm select-none">
-          <i class="twa twa-trophy text-3xl"></i>
-        </div>
-        <div class="flex-1">
-          <p class="text-[13px] leading-snug font-medium text-slate-700" id="achievement-text"></p>
-        </div>
-        <div class="opacity-80 select-none pr-1"><i class="twa twa-sparkles text-lg"></i></div>
-      </section>
+      <!-- 2. TABS GRAFIK -->
+      <div class="flex bg-white p-1 rounded-full shadow-sm border border-slate-100">
+        <button id="tab-minggu" class="flex-1 py-2 text-xs font-bold bg-blue-600 text-white rounded-full shadow-sm transition-all">Minggu</button>
+        <button id="tab-bulan" class="flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all">Bulan</button>
+        <button id="tab-tahun" class="flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all">Tahun</button>
+      </div>
 
-      <div id="stats-empty-hint" class="mt-4">
-        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-clock-rotate-left text-base"></i>
+      <!-- 3. GRAFIK BATANG -->
+      <div class="bg-white rounded-3xl p-5 pt-6 shadow-sm border border-slate-100 flex flex-col justify-between relative h-64">
+        <div class="absolute inset-x-0 top-12 bottom-12 flex flex-col justify-between px-5 pointer-events-none z-0">
+          <div class="border-t border-dashed border-slate-200 w-full relative"><span class="absolute -left-4 -top-2 text-[9px] font-semibold text-slate-400">100%</span></div>
+          <div class="border-t border-dashed border-slate-200 w-full relative"><span class="absolute -left-4 -top-2 text-[9px] font-semibold text-slate-400">50%</span></div>
+          <div class="border-t border-slate-200 w-full relative"><span class="absolute -left-4 -top-2 text-[9px] font-semibold text-slate-400">0%</span></div>
+        </div>
+
+        <div class="flex-1 flex items-end justify-between px-2 pb-2 relative z-10 gap-1 overflow-x-auto no-scrollbar" id="chart-bars">
+          <!-- Diisi JS -->
+        </div>
+
+        <div id="chart-labels" class="flex justify-between px-1 text-[10px] font-bold text-slate-600 w-full shrink-0">
+          <!-- Diisi JS -->
+        </div>
+      </div>
+
+      <!-- 4. KARTU STREAK & TOTAL -->
+      <div class="space-y-3">
+        <div class="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+              <i class="twa twa-trophy text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Streak Saat Ini</p>
+              <p class="text-xl font-extrabold text-slate-800"><span id="stat-week-streak">0</span> Hari</p>
+            </div>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-bold text-slate-800">Belum ada riwayat</p>
-            <p class="text-[11px] text-slate-500">Selesaikan habit pertamamu untuk mulai mengisi kalender.</p>
+          <i class="twa twa-fire text-3xl"></i>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shrink-0">
+              <i class="twa twa-star text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Total Habit Selesai</p>
+              <p class="text-xl font-extrabold text-slate-800"><span id="stat-week-total">0</span> Kali</p>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 5. HABIT TERPOPULER -->
+      <div class="pt-2">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2 mb-3 ml-1">
+          <i class="twa twa-crown text-lg"></i>
+          <span>Habit Terpopuler</span>
+        </h3>
+        <div id="popular-habit-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <!-- Diisi JS -->
+        </div>
+      </div>
+
     </main>
   </section>
 
@@ -412,7 +489,6 @@ tailwind.config = {
       <div class="absolute -bottom-8 -right-12 w-72 h-72 rounded-full bg-white/80 blur-2xl"></div>
       <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-80 h-48 bg-blue-100/50 rounded-full blur-3xl"></div>
     </div>
-
     <nav class="relative z-10 px-5 flex items-center justify-between pt-5 pb-3 flex-shrink-0">
       <button id="celebrate-back" aria-label="Kembali" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-white/40 active:scale-95 transition-all" type="button">
         <i class="fa-solid fa-chevron-left text-base text-blue-600"></i>
@@ -422,7 +498,6 @@ tailwind.config = {
         <i class="fa-regular fa-calendar text-base"></i>
       </button>
     </nav>
-
     <main class="relative z-10 flex-1 px-6 flex flex-col justify-between pt-4 pb-6">
       <div class="flex flex-col items-center text-center">
         <div class="relative mt-2 mb-6 flex items-center justify-center">
@@ -432,37 +507,30 @@ tailwind.config = {
           <div class="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-amber-300 twinkle-delay"></div>
           <div class="absolute -right-5 top-1/3 w-3 h-3 bg-sky-400 rounded-sm rotate-12 opacity-75"></div>
           <div class="absolute -bottom-3 right-3 w-4 h-4 rounded-full bg-sky-500 twinkle"></div>
-
           <div id="celebrate-circle" class="w-28 h-28 rounded-full bg-blue-500 flex items-center justify-center glow-circle border-4 border-white/60">
             <i class="fa-solid fa-check text-white text-5xl"></i>
           </div>
         </div>
-
         <h2 class="text-2xl font-bold text-slate-800 tracking-tight mb-1.5">Mantap!</h2>
         <p id="celebrate-subtitle" class="text-sm font-medium text-slate-600 mb-4">Habit selesai!</p>
-
         <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-100/70 border border-blue-200/60 text-xs font-semibold text-blue-700 shadow-sm">
           <span id="celebrate-streak-text">Streak kamu sekarang: 0 hari</span>
           <i class="twa twa-fire text-sm ml-1"></i>
         </div>
       </div>
-
       <div id="celebrate-reminder-card" class="w-full my-auto pt-2">
         <section class="bg-white/95 backdrop-blur-sm rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-blue-50/80">
           <div class="flex items-center justify-center space-x-2 text-slate-700 mb-2.5">
             <i class="twa twa-light-bulb text-xl"></i>
             <span class="text-xs font-semibold tracking-wide text-slate-600" id="celebrate-reminder-title">Pengingat Selanjutnya:</span>
           </div>
-          
           <div id="celebrate-reminder-note" class="text-sm font-bold text-slate-800 text-left leading-relaxed px-3 mb-3 whitespace-pre-line max-h-[30vh] overflow-y-auto"></div>
-          
           <div class="flex items-center justify-center text-xs font-medium text-slate-500 space-x-1">
             <i class="fa-regular fa-clock"></i>
             <span id="celebrate-countdown"></span>
           </div>
         </section>
       </div>
-
       <footer class="w-full flex flex-col items-center space-y-3 pb-2">
         <button id="celebrate-ok-btn" class="w-full py-3.5 px-6 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition duration-150 text-white font-semibold text-sm shadow-md shadow-blue-500/25 tracking-wide" type="button">
           Oke, Mengerti!
@@ -480,7 +548,6 @@ tailwind.config = {
       <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Detail Habit</h1>
       <div class="w-8"></div>
     </nav>
-
     <main class="flex-1 px-5 pt-2 pb-24 overflow-y-auto">
       <div class="space-y-6">
         <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3.5">
@@ -492,7 +559,6 @@ tailwind.config = {
             <p id="detail-subtitle" class="text-xs font-medium text-slate-400 mt-0.5">—</p>
           </div>
         </section>
-
         <section>
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-sm font-bold text-slate-900 drop-shadow-sm">Statistik</h3>
@@ -521,7 +587,6 @@ tailwind.config = {
             </div>
           </div>
         </section>
-
         <section>
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-sm font-bold text-slate-900 drop-shadow-sm">Catatan</h3>
@@ -534,8 +599,12 @@ tailwind.config = {
           </div>
         </section>
       </div>
-
       <footer class="pt-6">
+        <button id="detail-edit-btn" type="button"
+          class="w-full py-3.5 px-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition mb-3">
+          <i class="fa-solid fa-pen-to-square text-sm"></i>
+          <span>Edit Habit</span>
+        </button>
         <button id="detail-delete-btn" type="button"
           class="w-full py-3.5 px-4 bg-red-50 hover:bg-red-100 active:bg-red-200 text-rose-500 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition">
           <i class="fa-solid fa-trash-can text-sm"></i>
@@ -545,48 +614,50 @@ tailwind.config = {
     </main>
   </section>
 
-  <!-- ==================== PAGE: TAMBAH ==================== -->
+  <!-- ==================== PAGE: TAMBAH / EDIT ==================== -->
   <section id="page-add" class="page hidden flex-1 flex-col z-10">
     <nav class="px-5 py-3 flex items-center justify-between relative flex-shrink-0 bg-white/80 backdrop-blur-md">
       <button aria-label="Kembali" data-goto="home" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:bg-slate-200/60 transition-colors" type="button">
         <i class="fa-solid fa-chevron-left text-base"></i>
       </button>
-      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Tambah Habit</h1>
+      <h1 id="add-page-title" class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Tambah Habit</h1>
       <div class="w-8"></div>
     </nav>
-
     <main class="flex-1 px-5 pb-32 pt-2">
       <form id="add-habit-form" class="space-y-5" novalidate>
-        <!-- Hidden input -->
         <input type="hidden" id="habit-icon" value="fa-solid fa-sun" />
         <input type="hidden" id="habit-icon-bg" value="bg-amber-50" />
         <input type="hidden" id="habit-icon-color" value="text-amber-500" />
-
         <section class="flex flex-col items-center justify-center pt-1 pb-2">
           <button type="button" id="icon-preview" aria-label="Pilih ikon habit"
             class="relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all">
             <span class="absolute top-2 left-2.5 text-amber-300 font-medium text-lg leading-none select-none">+</span>
             <span id="icon-preview-emoji"><i class="fa-solid fa-sun text-4xl text-amber-500"></i></span>
           </button>
-          
           <button type="button" id="btn-change-icon"
             class="mt-2.5 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold active:scale-95 transition-all">
             Ganti Ikon
           </button>
-
-          <!-- Color Picker (Warna Ikon) -->
           <div class="mt-4 flex flex-col items-center">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Warna Ikon</span>
-            <div id="icon-color-picker" class="flex space-x-3">
-              <!-- Akan diisi oleh JS -->
-            </div>
+            <div id="icon-color-picker" class="flex space-x-3"></div>
           </div>
         </section>
-
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-name">Nama Habit</label>
           <input class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-            id="habit-name" name="habit_name" placeholder="Contoh: Membaca buku" type="text" maxlength="60" required/>
+            id="habit-name" name="habit_name" placeholder="Contoh: Minum air putih" type="text" maxlength="60" required/>
+        </div>
+
+        <!-- TARGET HARIAN BARU -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-target">Target Harian (Berapa kali?)</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-solid fa-bullseye text-sm"></i></span>
+            <input class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+              id="habit-target" name="habit_target" type="number" min="1" max="99" value="1"/>
+          </div>
+          <p class="text-[10px] text-slate-400 ml-1">Isi 1 jika hanya perlu sekali. Contoh: isi 8 untuk minum 8 gelas air.</p>
         </div>
 
         <div class="space-y-1.5 pt-1">
@@ -596,7 +667,6 @@ tailwind.config = {
             <button class="rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-type="anytime" type="button">Tanpa Jam</button>
           </div>
         </div>
-
         <div id="time-input-wrapper" class="space-y-1.5 pt-2">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-time">Waktu Alarm</label>
           <div class="relative flex items-center">
@@ -605,7 +675,6 @@ tailwind.config = {
               id="habit-time" name="habit_time" type="time" value="07:00"/>
           </div>
         </div>
-
         <div class="pt-1 flex items-center justify-between">
           <div class="pr-2">
             <h2 class="text-xs font-semibold text-slate-800 leading-tight" id="reminder-label">Pengingat</h2>
@@ -616,7 +685,6 @@ tailwind.config = {
             <div class="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
         </div>
-
         <div class="space-y-1.5 pt-1">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="reminder-note">
             Catatan Pengingat <span class="text-slate-400 font-normal">(Opsional)</span>
@@ -625,7 +693,6 @@ tailwind.config = {
             id="reminder-note" rows="3" maxlength="200"
             placeholder="Tulis pesan pengingat saat alarm berbunyi..."></textarea>
         </div>
-
         <div class="space-y-1.5 pt-1">
           <span class="block text-xs font-semibold text-slate-700 ml-0.5">Frekuensi</span>
           <div id="frequency-group" class="grid grid-cols-3 gap-2 bg-slate-200/70 p-1 rounded-2xl">
@@ -633,7 +700,6 @@ tailwind.config = {
             <button class="freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-freq="workday" type="button">Hari Kerja</button>
             <button class="freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-freq="custom" type="button">Kustom</button>
           </div>
-
           <div id="custom-days-panel" class="hidden mt-2.5 bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
             <div class="flex items-center justify-between mb-2 px-0.5">
               <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Pilih Hari</p>
@@ -649,9 +715,8 @@ tailwind.config = {
         </div>
       </form>
     </main>
-
     <div id="floating-save-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[420px] px-5 z-30">
-      <button form="add-habit-form" type="submit"
+      <button form="add-habit-form" type="submit" id="btn-save-habit"
         class="w-full py-4 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-sm tracking-wide shadow-lg shadow-blue-600/30 transition-all">
         Simpan
       </button>
@@ -667,7 +732,6 @@ tailwind.config = {
       <h1 class="text-lg font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Pengaturan</h1>
       <div class="w-9"></div>
     </div>
-
     <div class="flex-1 px-4 space-y-4 pt-4 pb-6">
       <section id="profile-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer active:bg-slate-50/70 transition-colors">
         <div class="flex items-center space-x-3.5">
@@ -689,7 +753,6 @@ tailwind.config = {
         </div>
         <i class="fa-solid fa-chevron-right text-sm text-slate-400"></i>
       </section>
-
       <section id="pro-pass-card" class="hidden bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-md shadow-blue-500/20 relative overflow-hidden">
         <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex items-center justify-between">
@@ -705,7 +768,6 @@ tailwind.config = {
           <button id="pro-manage-btn" class="bg-white text-blue-600 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-sm active:scale-95 transition-transform">Kelola</button>
         </div>
       </section>
-
       <section class="grid grid-cols-2 gap-3">
         <div class="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
           <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
@@ -716,7 +778,6 @@ tailwind.config = {
             <div class="text-[11px] text-slate-400 font-medium leading-none">Streak Aktif</div>
           </div>
         </div>
-        
         <div class="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
           <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
             <i class="twa twa-trophy text-xl"></i>
@@ -727,8 +788,6 @@ tailwind.config = {
           </div>
         </div>
       </section>
-
-      <!-- ===== AKUN & CLOUD ===== -->
       <section class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="p-3.5 flex items-center space-x-3">
           <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -740,7 +799,6 @@ tailwind.config = {
           </div>
         </div>
       </section>
-
       <section class="space-y-2 pt-1">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">PREFERENSI APLIKASI</h3>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-100 overflow-hidden">
@@ -798,7 +856,6 @@ tailwind.config = {
           </div>
         </div>
       </section>
-
       <section class="pt-2 pb-6 space-y-2">
         <button id="login-btn" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold py-3 rounded-2xl flex items-center justify-center space-x-2 transition-colors border border-blue-200/50 active:scale-[0.98]">
           <i class="fa-solid fa-right-to-bracket text-sm"></i>
@@ -812,23 +869,18 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- ==================== PAGE: ICON PICKER (BARU KATEGORI) ==================== -->
+  <!-- ==================== PAGE: ICON PICKER ==================== -->
   <section id="page-icon-picker" class="page hidden fixed inset-0 z-[300] flex flex-col">
-    <!-- Header -->
     <nav class="px-5 py-4 flex items-center justify-between bg-white border-b border-slate-100 shrink-0">
       <button id="icon-picker-back" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-700 active:bg-slate-100 transition-colors" type="button">
         <i class="fa-solid fa-chevron-left text-lg"></i>
       </button>
-      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Baru Kategori</h1>
+      <h1 class="text-base font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">Pilih Ikon</h1>
       <button id="icon-picker-save" class="bg-[#e15b64] hover:bg-[#d14b54] text-white text-sm font-semibold px-5 py-2 rounded-full shadow-md shadow-red-500/20 active:scale-95 transition-transform" type="button">
         Buat
       </button>
     </nav>
-    
-    <!-- Scrollable Content -->
-    <div id="icon-picker-content" class="flex-1 overflow-y-auto px-5 py-4 pb-24 space-y-6">
-      <!-- Akan diisi oleh JavaScript -->
-    </div>
+    <div id="icon-picker-content" class="flex-1 overflow-y-auto px-5 py-4 pb-24 space-y-6"></div>
   </section>
 
   <!-- ==================== NAV ==================== -->
@@ -905,16 +957,13 @@ tailwind.config = {
   const noneTodayEl = document.getElementById("habit-none-today");
 
   /* =====================================================
-     DATE HELPERS (RESET JAM 1 PAGI)
+     DATE HELPERS
      ===================================================== */
   function pad2(n) { return String(n).padStart(2, "0"); }
   function dateKey(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-  
   function getLogicalDate() {
     const now = new Date();
-    if (now.getHours() === 0) { 
-      now.setDate(now.getDate() - 1);
-    }
+    if (now.getHours() === 0) now.setDate(now.getDate() - 1);
     return now;
   }
 
@@ -922,9 +971,7 @@ tailwind.config = {
     const now = new Date();
     const next1AM = new Date();
     next1AM.setHours(1, 0, 0, 0);
-    if (now.getTime() >= next1AM.getTime()) {
-      next1AM.setDate(next1AM.getDate() + 1);
-    }
+    if (now.getTime() >= next1AM.getTime()) next1AM.setDate(next1AM.getDate() + 1);
     const timeUntilReset = next1AM.getTime() - now.getTime();
     setTimeout(() => {
       renderHome();
@@ -948,12 +995,8 @@ tailwind.config = {
   function getHabitDays(habit) {
     return (Array.isArray(habit.days) && habit.days.length) ? habit.days : ALL_DAYS;
   }
-  function isHabitDay(habit, date) {
-    return getHabitDays(habit).includes(date.getDay());
-  }
-  function isHabitToday(habit) {
-    return isHabitDay(habit, new Date());
-  }
+  function isHabitDay(habit, date) { return getHabitDays(habit).includes(date.getDay()); }
+  function isHabitToday(habit) { return isHabitDay(habit, new Date()); }
 
   /* =====================================================
      CLOUD SYNC
@@ -987,7 +1030,8 @@ tailwind.config = {
           notifEnabled: state.user.notifEnabled,
           soundEnabled: state.user.soundEnabled,
           headerBg: state.user.headerBg,
-          appBg: state.user.appBg
+          appBg: state.user.appBg,
+          avatar: state.user.avatar
         },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -1009,15 +1053,16 @@ tailwind.config = {
       if (data.profile && typeof data.profile === "object") {
         const p = data.profile;
         if (typeof p.name === "string") state.user.name = p.name;
-        state.user.isPro      = !!p.isPro;
-        state.user.isVip      = !!p.isVip;
-        state.user.tier       = p.tier || state.user.tier;
-        state.user.proExpiry  = p.proExpiry || "";
-        state.user.darkMode   = !!p.darkMode;
+        state.user.isPro = !!p.isPro;
+        state.user.isVip = !!p.isVip;
+        state.user.tier = p.tier || state.user.tier;
+        state.user.proExpiry = p.proExpiry || "";
+        state.user.darkMode = !!p.darkMode;
         state.user.notifEnabled = !!p.notifEnabled;
         state.user.soundEnabled = !!p.soundEnabled;
-        state.user.headerBg   = p.headerBg || null;
-        state.user.appBg      = p.appBg || null;
+        state.user.headerBg = p.headerBg || null;
+        state.user.appBg = p.appBg || null;
+        state.user.avatar = p.avatar || null;
       }
       recomputeGlobalStats();
       saveLocalOnly();
@@ -1046,13 +1091,13 @@ tailwind.config = {
       if (!d || typeof d !== "object") return;
       if (d.user) Object.assign(state.user, d.user);
       if (d.stats) Object.assign(state.stats, d.stats);
-      state.habits = Array.isArray(d.habits) ? d.habits : [];
+      state.habits = Array.isArray(d.habits) ? d.habits.filter(h => h && h.id) : [];
       state.history = (d.history && typeof d.history === "object") ? d.history : {};
     } catch (_) {}
   }
 
   /* =====================================================
-     AUDIO BEEP
+     AUDIO
      ===================================================== */
   let audioCtx = null;
   function playBeep() {
@@ -1100,32 +1145,52 @@ tailwind.config = {
      ===================================================== */
   function applyBackgrounds() {
     const mainEl = document.querySelector("main");
+    const bodyEl = document.body;
+    const headerEl = document.getElementById("home-header");
+    const overlayEl = document.getElementById("header-overlay");
+
     if (state.user.appBg) {
       mainEl.style.backgroundImage = `url('${state.user.appBg}')`;
       mainEl.style.backgroundSize = "cover";
       mainEl.style.backgroundPosition = "center";
       mainEl.style.backgroundAttachment = "fixed";
       mainEl.classList.remove("bg-[#F6F8FC]");
+
+      bodyEl.style.backgroundImage = `url('${state.user.appBg}')`;
+      bodyEl.style.backgroundSize = "cover";
+      bodyEl.style.backgroundPosition = "center";
+      bodyEl.style.backgroundAttachment = "fixed";
+      bodyEl.classList.remove("bg-[#F4F7FC]");
+
+      if (document.documentElement.classList.contains("dark")) {
+          mainEl.style.backgroundColor = "transparent";
+          bodyEl.style.backgroundColor = "transparent";
+      }
     } else {
-      mainEl.style.backgroundImage = "none";
+      mainEl.style.backgroundImage = "";
+      mainEl.style.backgroundColor = "";
       mainEl.classList.add("bg-[#F6F8FC]");
+
+      bodyEl.style.backgroundImage = "";
+      bodyEl.style.backgroundColor = "";
+      bodyEl.classList.add("bg-[#F4F7FC]");
     }
 
-    const headerEl = document.getElementById("home-header");
-    const overlayEl = document.getElementById("header-overlay");
+    headerEl.className = "relative pb-6 px-5 rounded-b-[36px] shadow-sm overflow-hidden text-white pt-5 transition-all duration-300 z-10";
     if (state.user.headerBg) {
       headerEl.style.backgroundImage = `url('${state.user.headerBg}')`;
       headerEl.classList.add("header-custom-bg");
       overlayEl.classList.remove("hidden");
     } else {
-      headerEl.style.backgroundImage = "none";
+      headerEl.style.backgroundImage = "";
       headerEl.classList.remove("header-custom-bg");
+      headerEl.classList.add("hero-sky-bg");
       overlayEl.classList.add("hidden");
     }
   }
 
   /* =====================================================
-     STATS
+     STATS LOGIC
      ===================================================== */
   function computeStreak(history) {
     if (!history) return 0;
@@ -1144,13 +1209,18 @@ tailwind.config = {
 
   function computeCompletionRate(habit) {
     const hh = habit.history || {};
-    const daysDone = Object.keys(hh).filter(k => hh[k] > 0).length;
-    if (daysDone === 0) return 0;
+    const totalActions = Object.values(hh).reduce((a,b) => a + b, 0);
+    if (totalActions === 0) return 0;
+    
     const createdAt = habit.createdAt ? new Date(habit.createdAt) : new Date();
     createdAt.setHours(0,0,0,0);
     const today = new Date(); today.setHours(0,0,0,0);
     const totalDays = Math.max(1, Math.floor((today - createdAt) / 86400000) + 1);
-    return Math.min(100, Math.round((daysDone / totalDays) * 100));
+    
+    const target = habit.target || 1;
+    const expectedActions = totalDays * target;
+    
+    return Math.min(100, Math.round((totalActions / expectedActions) * 100));
   }
 
   function recomputeGlobalStats() {
@@ -1159,7 +1229,10 @@ tailwind.config = {
     state.habits.forEach(h => {
       const hh = h.history || {};
       Object.entries(hh).forEach(([k, v]) => {
-        if (v > 0) { totalDone++; history[k] = (history[k] || 0) + 1; }
+        if (v > 0) { 
+          totalDone += v; 
+          history[k] = (history[k] || 0) + 1; 
+        }
       });
       maxStreak = Math.max(maxStreak, computeStreak(hh));
     });
@@ -1194,16 +1267,15 @@ tailwind.config = {
   }
 
   /* =====================================================
-     HOME RENDER (DRAG & DROP)
+     HOME RENDER
      ===================================================== */
   function habitIconHTML(h, size) {
     const cls = size === "lg" ? "text-3xl" : "text-2xl";
-    // Ambil warna ikon yang tersimpan, fallback ke slate-900 (hitam)
-    const colorClass = h.iconColor || 'text-slate-900'; 
-    
+    const colorClass = h.iconColor || 'text-slate-900';
+
     if (h.twa && h.twa.includes('fa-')) return `<i class="${h.twa} ${cls} ${colorClass}"></i>`;
     if (h.emoji && h.emoji.includes('fa-')) return `<i class="${h.emoji} ${cls} ${colorClass}"></i>`;
-    
+
     if (h.twa) return `<i class="twa ${h.twa} ${cls}"></i>`;
     if (h.emoji && h.emoji.startsWith('twa-')) return `<i class="twa ${h.emoji} ${cls}"></i>`;
     if (h.emoji) return `<span class="${cls} leading-none">${esc(h.emoji)}</span>`;
@@ -1211,7 +1283,11 @@ tailwind.config = {
   }
 
   function habitCardHTML(h) {
-    const checked = !!h.done;
+    const logicalTodayKey = dateKey(getLogicalDate());
+    const current = h.history?.[logicalTodayKey] || 0;
+    const target = h.target || 1;
+    const isDone = current >= target;
+    
     return `
     <article class="habit-item bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100 transition-all" data-id="${esc(h.id)}">
       <div class="flex items-center space-x-2.5 min-w-0 w-full">
@@ -1222,29 +1298,34 @@ tailwind.config = {
           ${habitIconHTML(h)}
         </div>
         <div class="min-w-0 flex-1 cursor-pointer">
-          <h4 class="text-sm font-bold ${checked ? 'text-slate-400 line-through' : 'text-slate-800'} truncate">${esc(h.title)}</h4>
+          <h4 class="text-sm font-bold ${isDone ? 'text-slate-400 line-through' : 'text-slate-800'} truncate flex items-center gap-1.5">
+            <span class="truncate">${esc(h.title)}</span>
+            ${target > 1 ? `<span class="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">${current}/${target}</span>` : ''}
+          </h4>
           <div class="flex items-center text-xs text-slate-400 font-medium space-x-1 mt-0.5 min-w-0">
-            <i class="fa-solid ${checked ? 'fa-check text-blue-500' : 'fa-check text-slate-300'} text-[10px] flex-shrink-0"></i>
+            <i class="fa-solid ${isDone ? 'fa-check text-blue-500' : 'fa-check text-slate-300'} text-[10px] flex-shrink-0"></i>
             <span class="truncate">${esc(h.subtitle || '')}</span>
           </div>
         </div>
       </div>
-      <button aria-label="Toggle habit"
-              class="habit-toggle-btn w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                checked
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                  : 'bg-white border-2 border-slate-200 text-transparent hover:border-blue-400'
-              }" type="button">
-        <i class="fa-solid fa-check text-xs font-bold"></i>
-      </button>
+      
+      <div class="flex items-center space-x-2 flex-shrink-0">
+        ${target > 1 && current > 0 ? `<button class="habit-minus-btn w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center active:scale-90 transition-all" type="button"><i class="fa-solid fa-minus text-xs font-bold"></i></button>` : ''}
+        <button aria-label="Toggle habit"
+                class="habit-toggle-btn w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                  isDone
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                    : 'bg-white border-2 border-slate-200 text-slate-400 hover:border-blue-400'
+                }" type="button">
+          <i class="fa-solid ${isDone ? 'fa-check' : 'fa-plus'} text-xs font-bold"></i>
+        </button>
+      </div>
     </article>`;
   }
 
   function renderHome() {
     const { habits, stats, user } = state;
-    
     applyBackgrounds();
-
     document.getElementById("user-name").textContent   = user.name || "Pengguna";
     document.getElementById("user-status").textContent = user.status || "Member";
     document.getElementById("pro-badge").classList.toggle("hidden", !user.isPro);
@@ -1259,13 +1340,6 @@ tailwind.config = {
     document.getElementById("stat-streak").textContent = stats.streak;
     document.getElementById("stat-total").textContent  = stats.totalDone;
 
-    const logicalToday = getLogicalDate();
-    const logicalTodayKey = dateKey(logicalToday);
-    
-    state.habits.forEach(h => {
-      h.done = !!h.history[logicalTodayKey];
-    });
-
     const todayHabits = habits.filter(isHabitToday);
     document.getElementById("habit-total").textContent = todayHabits.length + " Total";
     groupEl.innerHTML = todayHabits.map(habitCardHTML).join("");
@@ -1278,20 +1352,17 @@ tailwind.config = {
         animation: 150,
         handle: '.habit-drag-handle',
         ghostClass: 'opacity-50',
-        onEnd: function (evt) {
+        onEnd: function () {
           const items = Array.from(groupEl.children);
           const orderedIds = items.map(el => el.dataset.id);
-          
           const ordered = [];
           orderedIds.forEach(id => {
             const h = state.habits.find(x => String(x.id) === String(id));
             if (h) ordered.push(h);
           });
-          
           state.habits.forEach(h => {
             if (!orderedIds.includes(String(h.id))) ordered.push(h);
           });
-          
           state.habits = ordered;
           save();
           renderHome();
@@ -1307,11 +1378,11 @@ tailwind.config = {
   function renderCelebrate() {
     const habit = state.habits.find(h => String(h.id) === String(celebratedHabitId));
     if (!habit) { showPage("home"); return; }
-    
+
     document.getElementById("celebrate-subtitle").textContent = `${habit.title} sudah selesai!`;
     const streak = computeStreak(habit.history || {});
     document.getElementById("celebrate-streak-text").textContent = `Streak kamu sekarang: ${streak} hari`;
-    
+
     const reminderCard = document.getElementById("celebrate-reminder-card");
     const hasNote = habit.note && habit.note.trim().length > 0;
     const countdownEl = document.getElementById("celebrate-countdown");
@@ -1322,7 +1393,6 @@ tailwind.config = {
       reminderCard.classList.remove("hidden");
       titleEl.textContent = habit.time ? "Pengingat Selanjutnya:" : "Catatan Pengingat:";
       document.getElementById("celebrate-reminder-note").textContent = habit.note.trim();
-      
       if (habit.time) {
         countdownEl.textContent = computeCountdown(habit);
         timeIcon.style.display = 'inline-block';
@@ -1358,7 +1428,6 @@ tailwind.config = {
   function renderProfile() {
     const { user, stats } = state;
     applyBackgrounds();
-
     document.getElementById("profile-name").textContent = user.name || "Pengguna";
 
     const badge = document.getElementById("profile-tier-badge");
@@ -1406,12 +1475,14 @@ tailwind.config = {
      DETAIL
      ===================================================== */
   let currentDetailId = null;
+
   function openDetail(id) {
     const habit = state.habits.find(h => String(h.id) === String(id));
     if (!habit) return;
     currentDetailId = habit.id;
     showPage("detail");
   }
+
   function renderDetail() {
     const habit = state.habits.find(h => String(h.id) === String(currentDetailId));
     if (!habit) { showPage("home"); return; }
@@ -1419,22 +1490,303 @@ tailwind.config = {
     iconEl.className = `w-14 h-14 rounded-2xl ${habit.bg || 'bg-slate-100'} flex items-center justify-center shrink-0`;
     iconEl.innerHTML = habitIconHTML(habit, "lg");
     document.getElementById("detail-title").textContent = habit.title || "—";
-    document.getElementById("detail-subtitle").textContent = habit.subtitle || "";
+    
+    const target = habit.target || 1;
+    document.getElementById("detail-subtitle").textContent = (habit.subtitle || "") + (target > 1 ? ` · Target: ${target}x` : "");
+    
     const hh = habit.history || {};
-    const doneCount = Object.keys(hh).filter(k => hh[k] > 0).length;
+    const doneCount = Object.values(hh).reduce((a,b) => a + b, 0);
     const streak = computeStreak(hh);
     const rate = computeCompletionRate(habit);
+    
     document.getElementById("detail-done").textContent = doneCount;
     document.getElementById("detail-streak").textContent = streak;
     document.getElementById("detail-rate").textContent = rate + "%";
     document.getElementById("detail-note").textContent = (habit.note && habit.note.trim()) || "Belum ada catatan pengingat";
   }
 
+  let editingHabitId = null;
+
   /* =====================================================
-     STATS / RIWAYAT
+     BUILD DAY PICKER
+     ===================================================== */
+  let selectedDays = new Set([1,2,3,4,5,6,0]);
+
+  function buildDayPicker() {
+    const dayPicker = document.getElementById("day-picker");
+    dayPicker.innerHTML = "";
+    DAYS.forEach(d => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `day-chip ${selectedDays.has(d.v) ? 'day-chip-active' : ''}`;
+      btn.textContent = d.short;
+      btn.onclick = () => {
+        if (selectedDays.has(d.v)) selectedDays.delete(d.v);
+        else selectedDays.add(d.v);
+        btn.classList.toggle("day-chip-active");
+        updateFreqHint();
+      };
+      dayPicker.appendChild(btn);
+    });
+  }
+
+  function updateFreqHint() {
+    document.getElementById("custom-days-hint").textContent = `${selectedDays.size} hari dipilih`;
+  }
+
+  /* =====================================================
+     RESET & EDIT FORM
+     ===================================================== */
+  const freqBtns = document.querySelectorAll(".freq-btn");
+  const rtBtns = document.querySelectorAll(".rt-btn");
+  const customDaysPanel = document.getElementById("custom-days-panel");
+  const timeInputWrapper = document.getElementById("time-input-wrapper");
+  let selectedFreq = "daily";
+  let selectedReminderType = "alarm";
+
+  function resetAddForm() {
+    document.getElementById("add-habit-form").reset();
+    document.getElementById("habit-icon").value = "fa-solid fa-sun";
+    document.getElementById("habit-icon-bg").value = "bg-amber-50";
+    document.getElementById("habit-icon-color").value = "text-amber-500";
+    document.getElementById("habit-target").value = "1";
+
+    selectedIconClass = "fa-solid fa-sun";
+    selectedIconColor = "text-amber-500";
+    selectedIconBg = "bg-amber-50";
+    selectedIconBorder = "border-amber-200";
+
+    document.getElementById("icon-preview-emoji").innerHTML = `<i class="fa-solid fa-sun text-4xl text-amber-500"></i>`;
+    document.getElementById("icon-preview").className = "relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all";
+    renderColorPicker();
+
+    selectedDays = new Set([1,2,3,4,5,6,0]);
+    selectedFreq = "daily";
+    buildDayPicker();
+    customDaysPanel.classList.add("hidden");
+    updateFreqHint();
+
+    freqBtns.forEach((b, i) => {
+      b.className = i === 0
+        ? "freq-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+
+    selectedReminderType = "alarm";
+    rtBtns.forEach((b, i) => {
+      b.className = i === 0
+        ? "rt-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+    timeInputWrapper.classList.remove("hidden");
+    document.getElementById("habit-time").value = "07:00";
+
+    document.getElementById("add-page-title").textContent = "Tambah Habit";
+    document.getElementById("btn-save-habit").textContent = "Simpan";
+    editingHabitId = null;
+  }
+
+  function openEditHabit(id) {
+    const habit = state.habits.find(h => String(h.id) === String(id));
+    if (!habit) return;
+
+    editingHabitId = id;
+    showPage("add");
+
+    document.getElementById("add-page-title").textContent = "Edit Habit";
+    document.getElementById("btn-save-habit").textContent = "Simpan Perubahan";
+    document.getElementById("habit-name").value = habit.title;
+    document.getElementById("habit-target").value = habit.target || 1;
+    document.getElementById("habit-time").value = habit.time || "07:00";
+    document.getElementById("reminder-switch").checked = !!habit.reminder;
+    document.getElementById("reminder-note").value = habit.note || "";
+
+    selectedIconClass = habit.twa || "fa-solid fa-sun";
+    selectedIconColor = habit.iconColor || "text-amber-500";
+    selectedIconBg = habit.bg || "bg-amber-50";
+
+    document.getElementById("habit-icon").value = selectedIconClass;
+    document.getElementById("habit-icon-bg").value = selectedIconBg;
+    document.getElementById("habit-icon-color").value = selectedIconColor;
+
+    const colorMatch = ICON_COLORS.find(c => c.text === selectedIconColor);
+    selectedIconBorder = colorMatch ? colorMatch.border : "border-amber-200";
+
+    document.getElementById("icon-preview-emoji").innerHTML = `<i class="${selectedIconClass} text-4xl ${selectedIconColor}"></i>`;
+    document.getElementById("icon-preview").className = `relative w-24 h-24 rounded-3xl ${selectedIconBg} border ${selectedIconBorder} flex items-center justify-center shadow-inner active:scale-95 transition-all`;
+    renderColorPicker();
+
+    selectedDays = new Set(habit.days || [1,2,3,4,5,6,0]);
+    buildDayPicker();
+
+    if (selectedDays.size === 7) selectedFreq = "daily";
+    else if (selectedDays.size === 5 && !selectedDays.has(6) && !selectedDays.has(0)) selectedFreq = "workday";
+    else selectedFreq = "custom";
+
+    freqBtns.forEach(b => {
+      b.className = b.dataset.freq === selectedFreq
+        ? "freq-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "freq-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+    if (selectedFreq === "custom") customDaysPanel.classList.remove("hidden");
+    else customDaysPanel.classList.add("hidden");
+    updateFreqHint();
+
+    selectedReminderType = habit.time ? "alarm" : "anytime";
+    rtBtns.forEach((b, i) => {
+      const isAlarm = i === 0;
+      const isActive = (selectedReminderType === "alarm" && isAlarm) || (selectedReminderType === "anytime" && !isAlarm);
+      b.className = isActive
+        ? "rt-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+    if (selectedReminderType === "alarm") timeInputWrapper.classList.remove("hidden");
+    else timeInputWrapper.classList.add("hidden");
+  }
+
+  document.getElementById("detail-edit-btn").addEventListener("click", () => {
+    openEditHabit(currentDetailId);
+  });
+
+  /* =====================================================
+     STATS PAGE LOGIC (CHART, CALENDAR, POPULAR)
      ===================================================== */
   const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   const calState = { year: new Date().getFullYear(), month: new Date().getMonth() };
+  let activeStatsTab = 'minggu';
+
+  function renderChart(tab = 'minggu') {
+    const chartEl = document.getElementById("chart-bars");
+    const labelsEl = document.getElementById("chart-labels");
+    if (!chartEl) return;
+
+    let html = "";
+    let labelsHtml = "";
+    let dataPoints = [];
+    const today = new Date();
+
+    if (tab === 'minggu') {
+      const dayOfWeek = today.getDay() || 7; 
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - dayOfWeek + 1);
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dataPoints.push(d);
+      }
+      labelsHtml = `
+        <span class="w-8 text-center">Sen</span><span class="w-8 text-center">Sel</span>
+        <span class="w-8 text-center">Rab</span><span class="w-8 text-center">Kam</span>
+        <span class="w-8 text-center">Jum</span><span class="w-8 text-center">Sab</span>
+        <span class="w-8 text-center">Min</span>`;
+    } else if (tab === 'bulan') {
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let i = 1; i <= daysInMonth; i++) {
+        dataPoints.push(new Date(year, month, i));
+      }
+      labelsHtml = `<div class="flex justify-between w-full px-2"><span>1</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>${daysInMonth}</span></div>`;
+    } else {
+      const year = today.getFullYear();
+      for (let i = 0; i < 12; i++) {
+        dataPoints.push(new Date(year, i, 1)); 
+      }
+      labelsHtml = `<div class="flex justify-between w-full px-2"><span>Jan</span><span>Apr</span><span>Jul</span><span>Okt</span><span>Des</span></div>`;
+    }
+
+    dataPoints.forEach((date, idx) => {
+      let totalScheduled = 0;
+      let completed = 0;
+
+      if (tab === 'tahun') {
+        const m = date.getMonth();
+        const y = date.getFullYear();
+        const daysInM = new Date(y, m + 1, 0).getDate();
+        for(let d=1; d<=daysInM; d++) {
+          const dt = new Date(y, m, d);
+          const dk = dateKey(dt);
+          const scheduled = state.habits.filter(h => getHabitDays(h).includes(dt.getDay()));
+          totalScheduled += scheduled.length;
+          scheduled.forEach(h => { 
+            const val = h.history?.[dk] || 0;
+            const t = h.target || 1;
+            completed += Math.min(val / t, 1); 
+          });
+        }
+      } else {
+        const dateStr = dateKey(date);
+        const scheduled = state.habits.filter(h => getHabitDays(h).includes(date.getDay()));
+        totalScheduled = scheduled.length;
+        scheduled.forEach(h => { 
+          const val = h.history?.[dateStr] || 0;
+          const t = h.target || 1;
+          completed += Math.min(val / t, 1); 
+        });
+      }
+
+      let percent = totalScheduled > 0 ? Math.round((completed / totalScheduled) * 100) : 0;
+      let visualHeight = percent;
+      if (totalScheduled > 0 && percent === 0) visualHeight = 5; 
+      
+      const barWidth = tab === 'minggu' ? 'max-w-[24px]' : (tab === 'bulan' ? 'max-w-[8px]' : 'max-w-[16px]');
+      const minWidth = tab === 'bulan' ? '6px' : '10px';
+
+      html += `
+        <div class="flex flex-col justify-end h-full items-center group relative" style="flex: 1; min-width: ${minWidth};">
+          <div class="w-full ${barWidth} bg-slate-100/50 rounded-t-md absolute bottom-0 top-0"></div>
+          <div class="w-full ${barWidth} rounded-t-md bg-gradient-to-t from-blue-300 to-blue-600 relative z-10 transition-all duration-500" style="height: ${visualHeight}%"></div>
+        </div>
+      `;
+    });
+
+    chartEl.innerHTML = html;
+    if(labelsEl) labelsEl.innerHTML = labelsHtml;
+  }
+
+  function renderPopularHabit() {
+    const cardEl = document.getElementById("popular-habit-card");
+    if (!cardEl) return;
+
+    if (state.habits.length === 0) {
+      cardEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-2">Belum ada data habit.</p>`;
+      return;
+    }
+
+    let topHabit = null;
+    let maxCompleted = -1;
+
+    state.habits.forEach(h => {
+      const completedCount = Object.values(h.history || {}).reduce((a,b) => a + b, 0);
+      if (completedCount > maxCompleted) {
+        maxCompleted = completedCount;
+        topHabit = h;
+      }
+    });
+
+    if (topHabit) {
+      const rate = computeCompletionRate(topHabit);
+      const iconHtml = habitIconHTML(topHabit, "lg");
+      const bgClass = topHabit.bg || "bg-blue-50";
+
+      cardEl.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl ${bgClass} flex items-center justify-center shrink-0">
+            ${iconHtml}
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-bold text-slate-800 truncate pr-2">${esc(topHabit.title)}</span>
+              <span class="text-xs font-bold text-slate-800">${rate}%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5">
+              <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${rate}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   function renderCalendar() {
     const { year, month } = calState;
@@ -1446,11 +1798,13 @@ tailwind.config = {
     const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
     const todayDate = today.getDate();
     let cells = "";
+    
     for (let i = 0; i < startOffset; i++) cells += `<div class="h-9"></div>`;
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${pad2(month+1)}-${pad2(d)}`;
-      const doneCount = state.history[dateStr] || 0;
+      const doneCount = state.history[dateStr] || 0; 
       const isToday = isCurrentMonth && d === todayDate;
+      
       if (doneCount > 0) {
         cells += `
           <div class="cal-day flex flex-col items-center justify-center h-9">
@@ -1473,23 +1827,47 @@ tailwind.config = {
       }
     }
     document.getElementById("cal-days").innerHTML = cells;
-
-    const ach = document.getElementById("achievement-card");
-    const streak = state.stats.streak;
-    if (streak > 0) {
-      ach.classList.remove("hidden");
-      document.getElementById("achievement-text").innerHTML =
-        `Kamu sudah konsisten selama <span class="font-bold text-slate-900">${streak} hari!</span>`;
-    } else { ach.classList.add("hidden"); }
-
-    const hasHistory = Object.values(state.history).some(v => v > 0);
-    document.getElementById("stats-empty-hint").classList.toggle("hidden", hasHistory);
   }
 
   function renderStats() { 
     applyBackgrounds();
-    renderCalendar(); 
+    
+    let totalDone = 0;
+    state.habits.forEach(h => {
+      Object.values(h.history || {}).forEach(v => {
+        totalDone += v;
+      });
+    });
+
+    document.getElementById("stat-week-streak").textContent = state.stats.streak;
+    document.getElementById("stat-week-total").textContent = totalDone;
+
+    renderCalendar();
+    renderChart(activeStatsTab);
+    renderPopularHabit(); 
   }
+
+  document.getElementById("tab-minggu").addEventListener("click", (e) => {
+    activeStatsTab = 'minggu';
+    e.target.className = "flex-1 py-2 text-xs font-bold bg-blue-600 text-white rounded-full shadow-sm transition-all";
+    document.getElementById("tab-bulan").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    document.getElementById("tab-tahun").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    renderChart('minggu');
+  });
+  document.getElementById("tab-bulan").addEventListener("click", (e) => {
+    activeStatsTab = 'bulan';
+    e.target.className = "flex-1 py-2 text-xs font-bold bg-blue-600 text-white rounded-full shadow-sm transition-all";
+    document.getElementById("tab-minggu").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    document.getElementById("tab-tahun").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    renderChart('bulan');
+  });
+  document.getElementById("tab-tahun").addEventListener("click", (e) => {
+    activeStatsTab = 'tahun';
+    e.target.className = "flex-1 py-2 text-xs font-bold bg-blue-600 text-white rounded-full shadow-sm transition-all";
+    document.getElementById("tab-minggu").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    document.getElementById("tab-bulan").className = "flex-1 py-2 text-xs font-semibold text-slate-500 rounded-full transition-all";
+    renderChart('tahun');
+  });
 
   document.getElementById("cal-prev").addEventListener("click", () => {
     calState.month--;
@@ -1537,6 +1915,7 @@ tailwind.config = {
 
   function showPage(name) {
     if (!VALID.includes(name)) name = "home";
+    if (name === "add" && currentPage !== "detail") resetAddForm();
     currentPage = name;
     document.querySelectorAll(".page").forEach(p => {
       p.classList.toggle("hidden", p.id !== "page-" + name);
@@ -1637,6 +2016,8 @@ tailwind.config = {
     const el = document.getElementById("toggle-dark");
     if (el) el.checked = !!on;
     saveLocalOnly();
+    applyBackgrounds();
+    if (currentPage === "stats") renderStats();
   }
 
   /* =====================================================
@@ -1664,7 +2045,7 @@ tailwind.config = {
   /* =====================================================
      AUTH MODAL
      ===================================================== */
-  let authMode = "login"; 
+  let authMode = "login";
 
   function openAuthModal(mode) {
     authMode = mode || "login";
@@ -1683,7 +2064,6 @@ tailwind.config = {
           ${isLogin ? 'Masuk untuk menyinkronkan habit ke cloud' : 'Daftar untuk mulai sinkronisasi habit'}
         </p>
       </div>
-
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Email</label>
@@ -1694,7 +2074,6 @@ tailwind.config = {
               class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
           </div>
         </div>
-
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Password</label>
           <div class="relative flex items-center">
@@ -1708,7 +2087,6 @@ tailwind.config = {
             </button>
           </div>
         </div>
-
         ${!isLogin ? `
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5">Konfirmasi Password</label>
@@ -1719,21 +2097,17 @@ tailwind.config = {
               class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
           </div>
         </div>` : ''}
-
         <p id="auth-error" class="hidden text-[11px] font-semibold text-rose-500 text-center"></p>
-
         <button id="auth-submit" type="button"
           class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-semibold shadow-md shadow-blue-500/25 transition-all">
           ${isLogin ? 'Masuk' : 'Daftar Sekarang'}
         </button>
       </div>
-
       <div class="text-center mt-4 text-[11px] text-slate-500">
         ${isLogin
           ? `Belum punya akun? <button id="auth-switch" class="text-blue-600 font-bold underline-none">Daftar di sini</button>`
           : `Sudah punya akun? <button id="auth-switch" class="text-blue-600 font-bold underline-none">Masuk</button>`}
       </div>
-
       ${isLogin ? `<div class="text-center mt-1.5">
         <button id="auth-forgot" class="text-[11px] text-slate-400 font-semibold">Lupa password?</button>
       </div>` : ''}
@@ -1746,15 +2120,12 @@ tailwind.config = {
       inp.type = show ? "text" : "password";
       icon.className = show ? "fa-regular fa-eye-slash text-sm" : "fa-regular fa-eye text-sm";
     });
-
     document.getElementById("auth-switch").addEventListener("click", () => {
       authMode = isLogin ? "register" : "login";
       renderAuthModal();
     });
-
     const forgotBtn = document.getElementById("auth-forgot");
     if (forgotBtn) forgotBtn.addEventListener("click", openForgotModal);
-
     document.getElementById("auth-submit").addEventListener("click", submitAuth);
     document.getElementById("auth-password").addEventListener("keydown", (e) => {
       if (e.key === "Enter") submitAuth();
@@ -1787,10 +2158,7 @@ tailwind.config = {
   }
 
   async function submitAuth() {
-    if (!firebaseReady || !auth) {
-      showAuthError("Firebase belum siap, coba refresh");
-      return;
-    }
+    if (!firebaseReady || !auth) { showAuthError("Firebase belum siap, coba refresh"); return; }
     const email = document.getElementById("auth-email").value.trim();
     const pass  = document.getElementById("auth-password").value;
     const pass2El = document.getElementById("auth-password2");
@@ -1825,7 +2193,6 @@ tailwind.config = {
     }
   }
 
-  /* ---------- LUPA PASSWORD ---------- */
   function openForgotModal() {
     openModal(`
       <div class="flex flex-col items-center mb-4">
@@ -1851,11 +2218,9 @@ tailwind.config = {
         </button>
       </div>
     `);
-
     document.getElementById("reset-back").addEventListener("click", () => {
       authMode = "login"; renderAuthModal();
     });
-
     document.getElementById("reset-submit").addEventListener("click", async () => {
       const email = document.getElementById("reset-email").value.trim();
       const errEl = document.getElementById("reset-error");
@@ -1879,7 +2244,7 @@ tailwind.config = {
   }
 
   /* =====================================================
-     FIREBASE AUTH STATE LISTENER & LOGOUT FIX
+     FIREBASE AUTH STATE LISTENER
      ===================================================== */
   if (firebaseReady && auth) {
     auth.onAuthStateChanged(async (user) => {
@@ -1888,33 +2253,24 @@ tailwind.config = {
       currentUid = user ? user.uid : null;
 
       if (user) {
-        // LOGIN
         if (prevUid && prevUid !== user.uid) {
-          state.habits = [];
-          state.history = {};
-          state.stats = { streak: 0, totalDone: 0 };
+          state.habits = []; state.history = {}; state.stats = { streak: 0, totalDone: 0 };
         }
         const loaded = await pullFromCloud(user.uid);
         if (!loaded) await pushToCloud();
-
         if (!state.user.name && user.displayName) state.user.name = user.displayName;
         if (!state.user.name && user.email) state.user.name = user.email.split("@")[0];
         if (!state.user.avatar && user.photoURL) state.user.avatar = user.photoURL;
-
         saveLocalOnly();
       } else {
-        // LOGOUT
         if (prevUid) {
           state.user = { ...DEFAULT_USER };
           state.stats = { streak: 0, totalDone: 0 };
-          state.habits = [];
-          state.history = {};
-          
+          state.habits = []; state.history = {};
           localStorage.removeItem(STORAGE_KEY);
           applyDark(false);
         }
       }
-
       updateAuthUI(user);
       if (currentPage === "home")    renderHome();
       if (currentPage === "profile") renderProfile();
@@ -1925,37 +2281,55 @@ tailwind.config = {
   }
 
   /* =====================================================
-     EVENT LISTENERS (HABITS)
+     HABIT TOGGLE & DELETE (MULTI-TARGET)
      ===================================================== */
   groupEl.addEventListener("click", (e) => {
     if (e.target.closest(".habit-drag-handle")) return;
 
-    const btn = e.target.closest(".habit-toggle-btn");
-    if (btn) {
-      const card = btn.closest(".habit-item");
-      const habit = state.habits.find(h => String(h.id) === String(card.dataset.id));
-      if (!habit) return;
-      
-      const logicalTodayKey = dateKey(getLogicalDate());
-      
-      habit.done = !habit.done;
-      if (!habit.history) habit.history = {};
-      if (habit.done) habit.history[logicalTodayKey] = 1;
-      else delete habit.history[logicalTodayKey];
-      
-      recomputeGlobalStats();
-      save();
-      
-      if (habit.done) {
-        celebratedHabitId = habit.id;
-        showPage("celebrate");
-      } else {
+    const minusBtn = e.target.closest(".habit-minus-btn");
+    const toggleBtn = e.target.closest(".habit-toggle-btn");
+    const card = e.target.closest(".habit-item");
+
+    if (!card) return;
+    const habit = state.habits.find(h => String(h.id) === String(card.dataset.id));
+    if (!habit) return;
+
+    const logicalTodayKey = dateKey(getLogicalDate());
+    if (!habit.history) habit.history = {};
+    let current = habit.history[logicalTodayKey] || 0;
+    const target = habit.target || 1;
+
+    if (minusBtn) {
+      if (current > 0) {
+        current--;
+        if (current === 0) delete habit.history[logicalTodayKey];
+        else habit.history[logicalTodayKey] = current;
+        recomputeGlobalStats();
+        save();
         renderHome();
       }
       return;
     }
-    const card = e.target.closest(".habit-item");
-    if (card) openDetail(card.dataset.id);
+
+    if (toggleBtn) {
+      if (current < target) {
+        current++;
+        habit.history[logicalTodayKey] = current;
+        recomputeGlobalStats();
+        save();
+        if (current === target) {
+          celebratedHabitId = habit.id;
+          showPage("celebrate");
+        } else {
+          renderHome();
+        }
+      } else {
+        showToast("Target sudah tercapai hari ini!");
+      }
+      return;
+    }
+
+    openDetail(habit.id);
   });
 
   document.getElementById("celebrate-back").addEventListener("click", () => showPage("home"));
@@ -2001,15 +2375,24 @@ tailwind.config = {
     showPage(el.dataset.goto);
   });
 
-  window.addEventListener("habitpro:navigate", (e) => {
-    if (e.detail && e.detail.page) showPage(e.detail.page);
+  document.getElementById("toggle-dark").addEventListener("change", (e) => {
+    applyDark(e.target.checked);
+    scheduleCloudSave();
+    showToast(e.target.checked ? "Mode gelap aktif 🌙" : "Mode terang aktif ☀️");
   });
 
-  document.getElementById("btn-notif").addEventListener("click", () => {
-    state.user.unreadNotif = 0;
+  document.getElementById("toggle-sound").addEventListener("change", (e) => {
+    state.user.soundEnabled = e.target.checked;
     save();
-    renderHome();
-    
+    if (e.target.checked) { playBeep(); showToast("Suara notifikasi aktif"); }
+    else showToast("Suara notifikasi mati");
+  });
+
+  document.getElementById("row-notif").addEventListener("click", toggleNotif);
+  document.getElementById("profile-card").addEventListener("click", openProfileModal);
+  document.getElementById("row-about").addEventListener("click", openAboutModal);
+
+  function openAboutModal() {
     openModal(`
       <div class="flex flex-col items-center mb-4 text-center">
         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
@@ -2018,13 +2401,18 @@ tailwind.config = {
         <h3 class="text-lg font-bold text-slate-800">MyHabits v1.0.0</h3>
         <p class="text-[11px] font-semibold text-slate-400 mt-1">Pembaruan Terbaru</p>
       </div>
-
       <div class="space-y-3 mb-5">
         <div class="flex items-start space-x-3">
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fa-solid fa-check text-[10px]"></i>
           </div>
           <p class="text-xs text-slate-600 leading-snug">Habit ter-reset otomatis setiap jam 1 pagi.</p>
+        </div>
+        <div class="flex items-start space-x-3">
+          <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <p class="text-xs text-slate-600 leading-snug">Target harian berganda (misal minum 8 gelas air).</p>
         </div>
         <div class="flex items-start space-x-3">
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
@@ -2045,31 +2433,11 @@ tailwind.config = {
           <p class="text-xs text-slate-600 leading-snug">Sinkronisasi cloud (Firebase) untuk backup data otomatis.</p>
         </div>
       </div>
-
       <button data-modal-close class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-500/25 transition-all">
         Mantap!
       </button>
     `);
-  });
-
-  /* Pengaturan */
-  document.getElementById("toggle-dark").addEventListener("change", (e) => {
-    applyDark(e.target.checked);
-    scheduleCloudSave();
-    showToast(e.target.checked ? "Mode gelap aktif 🌙" : "Mode terang aktif ☀️");
-  });
-
-  document.getElementById("toggle-sound").addEventListener("change", (e) => {
-    state.user.soundEnabled = e.target.checked;
-    save();
-    if (e.target.checked) { playBeep(); showToast("Suara notifikasi aktif"); }
-    else showToast("Suara notifikasi mati");
-  });
-
-  document.getElementById("row-notif").addEventListener("click", toggleNotif);
-
-  document.getElementById("profile-card").addEventListener("click", openProfileModal);
-  document.getElementById("row-about").addEventListener("click", openAboutModal);
+  }
 
   document.getElementById("pro-manage-btn").addEventListener("click", () => {
     openModal(`
@@ -2101,7 +2469,6 @@ tailwind.config = {
     `);
   });
 
-  /* ---------- LOGIN / LOGOUT FIREBASE ---------- */
   document.getElementById("login-btn").addEventListener("click", () => {
     if (!firebaseReady) { showToast("Firebase belum siap, coba refresh"); return; }
     openAuthModal("login");
@@ -2118,7 +2485,9 @@ tailwind.config = {
     }
   });
 
-  /* ---------- MODAL: EDIT PROFIL & WALLPAPER ---------- */
+  /* =====================================================
+     MODAL: EDIT PROFIL
+     ===================================================== */
   let pendingAvatar = null;
   let pendingHeaderBg = null;
   let pendingHeaderFile = null;
@@ -2129,13 +2498,12 @@ tailwind.config = {
     pendingAvatar = state.user.avatar || null;
     pendingHeaderBg = state.user.headerBg || null;
     pendingAppBg = state.user.appBg || null;
-    pendingHeaderFile = null; 
+    pendingHeaderFile = null;
     pendingAppFile = null;
 
     openModal(`
       <h3 class="text-base font-bold text-slate-800 mb-1">Edit Profil & Tampilan</h3>
       <p class="text-[11px] text-slate-500 mb-4">Ubah nama, foto, dan atur background aplikasi.</p>
-      
       <div class="flex flex-col items-center mb-4">
         <div id="avatar-preview" class="w-20 h-20 rounded-full overflow-hidden bg-blue-100 border-2 border-blue-500/20 flex items-center justify-center text-blue-500 mb-2">
           ${pendingAvatar
@@ -2147,7 +2515,6 @@ tailwind.config = {
         </button>
         <input type="file" id="avatar-file" accept="image/*" class="hidden"/>
       </div>
-
       <div class="flex flex-col items-center mb-4 border-t border-slate-100 pt-4">
         <p class="text-xs font-bold text-slate-800 mb-2">Tampilan Latar Belakang</p>
         <div class="flex gap-2 w-full">
@@ -2166,12 +2533,10 @@ tailwind.config = {
         <input type="file" id="appbg-file" accept="image/*,image/gif" class="hidden"/>
         <p class="text-[9px] text-slate-400 mt-2 text-center">Format: JPG, PNG, GIF. Maksimal 2MB (Premium)</p>
       </div>
-
       <label class="block text-xs font-semibold text-slate-700 mb-1.5 ml-0.5 border-t border-slate-100 pt-3">Nama</label>
       <input id="edit-name" type="text" maxlength="30" value="${esc(state.user.name || "")}"
         placeholder="Nama kamu"
         class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all mb-4"/>
-      
       <div class="flex gap-2">
         <button data-modal-close class="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-semibold">Batal</button>
         <button id="save-profile" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white text-sm font-semibold">Simpan</button>
@@ -2190,7 +2555,6 @@ tailwind.config = {
         if (prev) prev.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover" alt="">`;
       });
     });
-
     document.getElementById("btn-pick-header").addEventListener("click", () => {
       document.getElementById("header-file").click();
     });
@@ -2210,7 +2574,6 @@ tailwind.config = {
       pendingHeaderBg = null; pendingHeaderFile = null;
       showToast("Header dihapus, klik Simpan");
     });
-
     document.getElementById("btn-pick-appbg").addEventListener("click", () => {
       document.getElementById("appbg-file").click();
     });
@@ -2235,7 +2598,7 @@ tailwind.config = {
       const btn = document.getElementById("save-profile");
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
-      
+
       if (pendingHeaderFile && currentUser && storage) {
         try {
           const fileRef = storage.ref(`headers/${currentUser.uid}_${Date.now()}`);
@@ -2247,7 +2610,6 @@ tailwind.config = {
           btn.disabled = false; btn.textContent = "Simpan"; return;
         }
       }
-      
       if (pendingAppFile && currentUser && storage) {
         try {
           const fileRef = storage.ref(`backgrounds/${currentUser.uid}_app_${Date.now()}`);
@@ -2265,7 +2627,6 @@ tailwind.config = {
       state.user.avatar = pendingAvatar;
       state.user.headerBg = pendingHeaderBg;
       state.user.appBg = pendingAppBg;
-      
       if (!state.user.tier || state.user.tier === "Pengguna Baru") {
         state.user.tier = state.habits.length > 0 ? "Pejuang Habit" : "Pengguna Baru";
       }
@@ -2292,45 +2653,18 @@ tailwind.config = {
           const w = img.width * scale, h = img.height * scale;
           ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
           cb(canvas.toDataURL("image/jpeg", 0.85));
-        } catch (_) { cb(reader.result); }
+        } catch (_) {
+          cb(reader.result);
+        }
       };
-      img.onerror = () => cb(null);
+      img.onerror = () => cb(reader.result);
       img.src = reader.result;
     };
     reader.readAsDataURL(file);
   }
 
-  /* ---------- MODAL: TENTANG ---------- */
-  function openAboutModal() {
-    openModal(`
-      <div class="text-center">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-3">
-          <i class="twa twa-sparkles text-3xl"></i>
-        </div>
-        <h3 class="text-base font-bold text-slate-800">MyHabits</h3>
-        <p class="text-[11px] font-semibold text-slate-400 mb-3">Versi 1.0.0</p>
-        <p class="text-xs text-slate-600 leading-relaxed">
-          MyHabits membantu kamu membangun kebiasaan baik dengan pengingat harian,
-          pelacakan streak, dan kalender riwayat. Data tersimpan lokal dan tersinkronisasi
-          ke cloud jika kamu login.
-        </p>
-      </div>
-      <div class="mt-4 space-y-2">
-        <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5">
-          <span class="text-xs font-semibold text-slate-600">Total habit</span>
-          <span class="text-xs font-bold text-slate-800">${state.habits.length}</span>
-        </div>
-        <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5">
-          <span class="text-xs font-semibold text-slate-600">Cloud sync</span>
-          <span class="text-xs font-bold ${currentUser ? 'text-emerald-600' : 'text-slate-500'}">${currentUser ? 'Aktif' : 'Off'}</span>
-        </div>
-      </div>
-      <button data-modal-close class="mt-4 w-full py-3 rounded-2xl bg-blue-600 text-white text-sm font-semibold">Tutup</button>
-    `);
-  }
-
   /* =====================================================
-     ICON PICKER (BARU KATEGORI) - DIPERBARUI
+     ICON PICKER
      ===================================================== */
   const FA_ICON_CATEGORIES = [
     {
@@ -2347,11 +2681,11 @@ tailwind.config = {
     },
     {
       title: "Lain-lain",
-      icons: ["fa-house", "fa-house-chimney-window", "fa-bullhorn", "fa-hand-holding-heart", "fa-ticket", "fa-globe", "fa-share-nodes", "fa-star", "fa-heart", "fa-check", "fa-box", "fa-gift"]
+      icons: ["fa-house", "fa-house-chimney-window", "fa-bullhorn", "fa-hand-holding-medical", "fa-ticket", "fa-globe", "fa-share-nodes", "fa-star", "fa-heart", "fa-check", "fa-box", "fa-gift"]
     },
     {
       title: "Lingkungan & alam",
-      icons: ["fa-water", "fa-glass-water", "fa-glass-water-droplet", "fa-droplet", "fa-cloud-showers-heavy", "fa-sun", "fa-cloud-sun", "fa-moon", "fa-wind", "fa-cloud", "fa-cloud-bolt", "fa-tornado", "fa-hurricane", "fa-snowflake", "fa-smog", "fa-earth-americas", "fa-volcano", "fa-leaf", "fa-tree", "fa-seedling", "fa-wheelbarrow", "fa-recycle", "fa-earth-asia", "fa-house-flood-water", "fa-mountain"]
+      icons: ["fa-water", "fa-glass-water", "fa-glass-water-droplet", "fa-droplet", "fa-cloud-showers-heavy", "fa-sun", "fa-cloud-sun", "fa-moon", "fa-wind", "fa-cloud", "fa-cloud-bolt", "fa-tornado", "fa-hurricane", "fa-snowflake", "fa-smog", "fa-earth-americas", "fa-volcano", "fa-leaf", "fa-tree", "fa-seedling", "fa-trowel", "fa-recycle", "fa-earth-asia", "fa-house-flood-water", "fa-mountain"]
     },
     {
       title: "Sosial & komunitas",
@@ -2371,22 +2705,52 @@ tailwind.config = {
     },
     {
       title: "Kesehatan & kebugaran",
-      icons: ["fa-heart-pulse", "fa-kit-medical", "fa-stethoscope", "fa-brain", "fa-dumbbell", "fa-spa", "fa-bottle-droplet", "fa-heart-crack", "fa-stopwatch", "fa-chart-pie", "fa-shoe-prints", "fa-hand-holding-heart", "fa-tooth", "fa-lungs", "fa-arrow-up", "fa-arrow-down", "fa-wave-square", "fa-heart", "fa-bag-shopping", "fa-syringe", "fa-face-smile", "fa-child", "fa-moon", "fa-clock", "fa-glass-water"]
+      icons: ["fa-heart-pulse", "fa-kit-medical", "fa-stethoscope", "fa-brain", "fa-dumbbell", "fa-spa", "fa-bottle-droplet", "fa-heart-crack", "fa-stopwatch", "fa-chart-pie", "fa-shoe-prints", "fa-hand-holding-medical", "fa-tooth", "fa-lungs", "fa-arrow-up", "fa-arrow-down", "fa-wave-square", "fa-heart", "fa-bag-shopping", "fa-syringe", "fa-face-smile", "fa-child", "fa-moon", "fa-clock", "fa-glass-water"]
+    },
+    {
+      title: "Aktivitas harian",
+      icons: ["fa-bed", "fa-shower", "fa-bath", "fa-tooth", "fa-soap", "fa-pump-soap", "fa-hands-bubbles", "fa-utensils", "fa-mug-hot", "fa-mug-saucer", "fa-glass-water", "fa-bottle-water", "fa-coffee", "fa-shirt", "fa-socks", "fa-shoe-prints", "fa-scissors", "fa-eye", "fa-glasses", "fa-toilet", "fa-toilet-paper"]
+    },
+    {
+      title: "Ibadah & spiritual",
+      icons: ["fa-hands-praying", "fa-person-praying", "fa-mosque", "fa-book-quran", "fa-kaaba", "fa-place-of-worship", "fa-church", "fa-cross", "fa-star-of-david", "fa-synagogue", "fa-om", "fa-dharmachakra", "fa-hand-sparkles", "fa-hands", "fa-hand-holding-medical", "fa-spa", "fa-leaf", "fa-heart", "fa-dove"]
+    },
+    {
+      title: "Rumah & kebersihan",
+      icons: ["fa-house", "fa-couch", "fa-tv", "fa-kitchen-set", "fa-broom", "fa-brush", "fa-spray-can-sparkles", "fa-pump-soap", "fa-soap", "fa-water", "fa-faucet", "fa-faucet-drip", "fa-shirt", "fa-socks", "fa-vest", "fa-recycle", "fa-trash", "fa-trash-can", "fa-box", "fa-key", "fa-plug", "fa-lightbulb"]
+    },
+    {
+      title: "Keuangan & belanja",
+      icons: ["fa-wallet", "fa-coins", "fa-piggy-bank", "fa-money-bill", "fa-money-bill-wave", "fa-credit-card", "fa-receipt", "fa-hand-holding-dollar", "fa-sack-dollar", "fa-file-invoice-dollar", "fa-basket-shopping", "fa-bag-shopping", "fa-cart-shopping", "fa-store", "fa-shop", "fa-tag", "fa-tags"]
+    },
+    {
+      title: "Transportasi",
+      icons: ["fa-car", "fa-car-side", "fa-bus", "fa-motorcycle", "fa-bicycle", "fa-gas-pump", "fa-truck", "fa-taxi", "fa-train", "fa-plane", "fa-rocket", "fa-ship", "fa-anchor", "fa-person-walking", "fa-person-biking", "fa-road"]
+    },
+    {
+      title: "Hewan & tanaman",
+      icons: ["fa-dog", "fa-cat", "fa-fish", "fa-fish-fins", "fa-paw", "fa-crow", "fa-dove", "fa-horse", "fa-seedling", "fa-leaf", "fa-tree", "fa-fan", "fa-carrot", "fa-apple-whole", "fa-lemon", "fa-wheat-awn", "fa-spa", "fa-mountain-sun"]
+    },
+    {
+      title: "Keluarga & anak",
+      icons: ["fa-baby", "fa-child", "fa-children", "fa-person-breastfeeding", "fa-person-pregnant", "fa-user-group", "fa-people-roof", "fa-people-group", "fa-hands-holding-child", "fa-hand-holding-medical", "fa-phone", "fa-mobile-screen", "fa-envelope", "fa-comment", "fa-message", "fa-face-smile", "fa-face-grin-beam"]
+    },
+    {
+      title: "Emosi & mental",
+      icons: ["fa-face-smile", "fa-face-laugh", "fa-face-grin", "fa-face-grin-beam", "fa-face-grin-stars", "fa-face-meh", "fa-face-frown", "fa-face-tired", "fa-face-sad-tear", "fa-face-sad-cry", "fa-face-angry", "fa-brain", "fa-heart", "fa-heart-crack", "fa-hand-sparkles", "fa-spa", "fa-leaf", "fa-cloud-sun", "fa-sun"]
     }
   ];
 
-  let selectedIconClass = "fa-solid fa-sun"; 
+  let selectedIconClass = "fa-solid fa-sun";
 
   function renderIconPickerGrid() {
     const container = document.getElementById("icon-picker-content");
     if (!container) return;
-    
     let html = "";
     FA_ICON_CATEGORIES.forEach(cat => {
       html += `<div class="mb-6">
           <h3 class="text-sm font-bold text-slate-900 mb-3 ml-1">${cat.title}</h3>
           <div class="grid grid-cols-5 gap-3">`;
-      
       cat.icons.forEach(icon => {
         const fullClass = `fa-solid ${icon}`;
         const isSelected = selectedIconClass === fullClass;
@@ -2397,23 +2761,19 @@ tailwind.config = {
             </button>
         `;
       });
-      
       html += `</div></div>`;
     });
     container.innerHTML = html;
   }
 
-  // Global function for selecting icon
   window.selectIcon = function(iconClass) {
     selectedIconClass = iconClass;
-    renderIconPickerGrid(); 
-  }
+    renderIconPickerGrid();
+  };
 
-  // Open picker
   document.getElementById("btn-change-icon").addEventListener("click", () => {
     const currentIcon = document.getElementById("habit-icon").value;
     if (currentIcon) selectedIconClass = currentIcon;
-    
     document.getElementById("page-icon-picker").classList.remove("hidden");
     document.body.classList.add("hide-nav");
     renderIconPickerGrid();
@@ -2423,20 +2783,19 @@ tailwind.config = {
     document.getElementById("btn-change-icon").click();
   });
 
-  // Close picker (Back)
   document.getElementById("icon-picker-back").addEventListener("click", () => {
     document.getElementById("page-icon-picker").classList.add("hidden");
-    document.body.classList.remove("hide-nav");
+    if (!["add","detail","celebrate"].includes(currentPage)) {
+      document.body.classList.remove("hide-nav");
+    }
   });
 
-  // Save picker (Buat)
   document.getElementById("icon-picker-save").addEventListener("click", () => {
     document.getElementById("page-icon-picker").classList.add("hidden");
-    document.body.classList.remove("hide-nav");
-    
+    if (!["add","detail","celebrate"].includes(currentPage)) {
+      document.body.classList.remove("hide-nav");
+    }
     document.getElementById("habit-icon").value = selectedIconClass;
-    
-    // Ambil warna saat ini dari hidden input
     const currentColor = document.getElementById("habit-icon-color").value;
     document.getElementById("icon-preview-emoji").innerHTML = `<i class="${selectedIconClass} text-4xl ${currentColor}"></i>`;
   });
@@ -2445,13 +2804,13 @@ tailwind.config = {
      COLOR PICKER (WARNA IKON)
      ===================================================== */
   const ICON_COLORS = [
-    { text: 'text-slate-800', bg: 'bg-slate-100', border: 'border-slate-300' }, // Default
+    { text: 'text-slate-800', bg: 'bg-slate-100', border: 'border-slate-300' },
     { text: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
     { text: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
     { text: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
     { text: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200' },
     { text: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
-    { text: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+    { text: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' }
   ];
 
   let selectedIconColor = 'text-amber-500';
@@ -2461,9 +2820,8 @@ tailwind.config = {
   function renderColorPicker() {
     const container = document.getElementById("icon-color-picker");
     if (!container) return;
-    
     container.innerHTML = ICON_COLORS.map(c => `
-      <button type="button" onclick="selectIconColor('${c.text}', '${c.bg}', '${c.border}')" 
+      <button type="button" onclick="selectIconColor('${c.text}', '${c.bg}', '${c.border}')"
               class="color-btn ${c.bg} ${selectedIconColor === c.text ? 'selected' : ''}">
         <i class="fa-solid fa-circle ${c.text} text-[10px]"></i>
       </button>
@@ -2474,54 +2832,19 @@ tailwind.config = {
     selectedIconColor = textClass;
     selectedIconBg = bgClass;
     selectedIconBorder = borderClass;
-    
     renderColorPicker();
-    
-    // Update preview background
     document.getElementById("icon-preview").className = `relative w-24 h-24 rounded-3xl ${bgClass} border ${borderClass} flex items-center justify-center shadow-inner active:scale-95 transition-all`;
-    
-    // Update preview icon
     const currentIcon = document.getElementById("habit-icon").value;
     document.getElementById("icon-preview-emoji").innerHTML = `<i class="${currentIcon} text-4xl ${textClass}"></i>`;
-    
-    // Update hidden input
     document.getElementById("habit-icon-bg").value = bgClass;
     document.getElementById("habit-icon-color").value = textClass;
-  }
+  };
 
-  // Initialize color picker
   renderColorPicker();
 
   /* =====================================================
-     FORM SUBMIT (ADD HABIT)
+     FREQ / REMINDER / DAYS HANDLERS
      ===================================================== */
-  // Setup frequency buttons
-  let selectedFreq = "daily";
-  let selectedDays = new Set([1,2,3,4,5,6,0]);
-  
-  const freqBtns = document.querySelectorAll(".freq-btn");
-  const customDaysPanel = document.getElementById("custom-days-panel");
-  const dayPicker = document.getElementById("day-picker");
-
-  // Render day chips
-  DAYS.forEach(d => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `day-chip ${selectedDays.has(d.v) ? 'day-chip-active' : ''}`;
-    btn.textContent = d.short;
-    btn.onclick = () => {
-      if (selectedDays.has(d.v)) selectedDays.delete(d.v);
-      else selectedDays.add(d.v);
-      btn.classList.toggle("day-chip-active");
-      updateFreqHint();
-    };
-    dayPicker.appendChild(btn);
-  });
-
-  function updateFreqHint() {
-    document.getElementById("custom-days-hint").textContent = `${selectedDays.size} hari dipilih`;
-  }
-
   freqBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       freqBtns.forEach(b => {
@@ -2529,16 +2852,13 @@ tailwind.config = {
       });
       btn.className = "freq-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all";
       selectedFreq = btn.dataset.freq;
-      
       if (selectedFreq === "custom") {
         customDaysPanel.classList.remove("hidden");
       } else {
         customDaysPanel.classList.add("hidden");
         if (selectedFreq === "daily") selectedDays = new Set([1,2,3,4,5,6,0]);
         if (selectedFreq === "workday") selectedDays = new Set([1,2,3,4,5]);
-        
-        // update chip visuals
-        const chips = dayPicker.querySelectorAll(".day-chip");
+        const chips = document.querySelectorAll("#day-picker .day-chip");
         chips.forEach((c, i) => {
           const dayVal = DAYS[i].v;
           if (selectedDays.has(dayVal)) c.classList.add("day-chip-active");
@@ -2551,12 +2871,12 @@ tailwind.config = {
 
   document.getElementById("day-select-all").onclick = () => {
     selectedDays = new Set([1,2,3,4,5,6,0]);
-    dayPicker.querySelectorAll(".day-chip").forEach(c => c.classList.add("day-chip-active"));
+    document.querySelectorAll("#day-picker .day-chip").forEach(c => c.classList.add("day-chip-active"));
     updateFreqHint();
   };
   document.getElementById("day-select-workday").onclick = () => {
     selectedDays = new Set([1,2,3,4,5]);
-    dayPicker.querySelectorAll(".day-chip").forEach((c, i) => {
+    document.querySelectorAll("#day-picker .day-chip").forEach((c, i) => {
       if (selectedDays.has(DAYS[i].v)) c.classList.add("day-chip-active");
       else c.classList.remove("day-chip-active");
     });
@@ -2564,14 +2884,9 @@ tailwind.config = {
   };
   document.getElementById("day-clear-all").onclick = () => {
     selectedDays.clear();
-    dayPicker.querySelectorAll(".day-chip").forEach(c => c.classList.remove("day-chip-active"));
+    document.querySelectorAll("#day-picker .day-chip").forEach(c => c.classList.remove("day-chip-active"));
     updateFreqHint();
   };
-
-  // Reminder Type Toggle
-  let selectedReminderType = "alarm";
-  const rtBtns = document.querySelectorAll(".rt-btn");
-  const timeInputWrapper = document.getElementById("time-input-wrapper");
 
   rtBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -2580,7 +2895,6 @@ tailwind.config = {
       });
       btn.className = "rt-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all";
       selectedReminderType = btn.dataset.type;
-      
       if (selectedReminderType === "anytime") {
         timeInputWrapper.classList.add("hidden");
       } else {
@@ -2589,13 +2903,13 @@ tailwind.config = {
     });
   });
 
-  // Submit Form
+  /* =====================================================
+     FORM SUBMIT (ADD / EDIT HABIT)
+     ===================================================== */
   document.getElementById("add-habit-form").addEventListener("submit", (e) => {
     e.preventDefault();
-    
     const title = document.getElementById("habit-name").value.trim();
     if (!title) { showToast("Nama habit wajib diisi"); return; }
-    
     const iconClass = document.getElementById("habit-icon").value || "fa-solid fa-sun";
     const bgColor = document.getElementById("habit-icon-bg").value || "bg-amber-50";
     const iconColor = document.getElementById("habit-icon-color").value || "text-amber-500";
@@ -2603,47 +2917,48 @@ tailwind.config = {
     const reminder = document.getElementById("reminder-switch").checked;
     const note = document.getElementById("reminder-note").value.trim();
     const daysArr = Array.from(selectedDays);
+    const targetVal = parseInt(document.getElementById("habit-target").value) || 1;
     
     if (daysArr.length === 0) { showToast("Pilih minimal satu hari"); return; }
 
-    const newHabit = {
-      id: Date.now().toString(),
-      title: title,
-      subtitle: time ? `Setiap hari, ${time}` : "Bisa dilakukan kapan saja",
-      twa: iconClass, 
-      bg: bgColor,
-      iconColor: iconColor, // Simpan warna ikon
-      time: time,
-      reminder: reminder,
-      note: note,
-      days: daysArr,
-      createdAt: new Date().toISOString(),
-      history: {}
-    };
+    if (editingHabitId) {
+      const habit = state.habits.find(h => String(h.id) === String(editingHabitId));
+      if (habit) {
+        habit.title = title;
+        habit.twa = iconClass;
+        habit.bg = bgColor;
+        habit.iconColor = iconColor;
+        habit.time = time;
+        habit.reminder = reminder;
+        habit.note = note;
+        habit.days = daysArr;
+        habit.target = targetVal;
+        habit.subtitle = time ? `Setiap hari, ${time}` : "Bisa dilakukan kapan saja";
+      }
+      showToast("Habit berhasil diperbarui ✨");
+    } else {
+      const newHabit = {
+        id: Date.now().toString(),
+        title: title,
+        subtitle: time ? `Setiap hari, ${time}` : "Bisa dilakukan kapan saja",
+        twa: iconClass,
+        bg: bgColor,
+        iconColor: iconColor,
+        time: time,
+        reminder: reminder,
+        note: note,
+        days: daysArr,
+        target: targetVal,
+        createdAt: new Date().toISOString(),
+        history: {}
+      };
+      state.habits.push(newHabit);
+      showToast("Habit berhasil ditambahkan ✨");
+    }
 
-    state.habits.push(newHabit);
     recomputeGlobalStats();
     save();
-    
-    // Reset Form
-    document.getElementById("add-habit-form").reset();
-    document.getElementById("habit-icon").value = "fa-solid fa-sun";
-    document.getElementById("habit-icon-bg").value = "bg-amber-50";
-    document.getElementById("habit-icon-color").value = "text-amber-500";
-    document.getElementById("icon-preview-emoji").innerHTML = `<i class="fa-solid fa-sun text-4xl text-amber-500"></i>`;
-    
-    // Reset Color Picker
-    selectedIconColor = 'text-amber-500';
-    selectedIconBg = 'bg-amber-50';
-    selectedIconBorder = 'border-amber-200';
-    renderColorPicker();
-    document.getElementById("icon-preview").className = "relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all";
-
-    selectedDays = new Set([1,2,3,4,5,6,0]);
-    customDaysPanel.classList.add("hidden");
-    freqBtns[0].click(); // reset to daily
-    
-    showToast("Habit berhasil ditambahkan ✨");
+    resetAddForm();
     showPage("home");
   });
 
@@ -2655,11 +2970,7 @@ tailwind.config = {
     toast.className = "fixed top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-[400] transition-all duration-300 opacity-0 -translate-y-4";
     toast.innerHTML = msg;
     document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.classList.remove("opacity-0", "-translate-y-4");
-    }, 10);
-    
+    setTimeout(() => { toast.classList.remove("opacity-0", "-translate-y-4"); }, 10);
     setTimeout(() => {
       toast.classList.add("opacity-0", "-translate-y-4");
       setTimeout(() => toast.remove(), 300);
@@ -2670,17 +2981,21 @@ tailwind.config = {
      INIT
      ===================================================== */
   load();
-  if (state.user.darkMode) applyDark(true);
-  startReminderLoop();
-  setupMidnightReset();
+  applyDark(state.user.darkMode);
+  applyBackgrounds();
+  buildDayPicker();
   renderHome();
   renderNav("home");
-  
-  // Handle URL Hash for direct navigation
-  const hash = window.location.hash.replace("#", "");
-  if (VALID.includes(hash)) {
-    showPage(hash);
-  }
+  updateAuthUI(null);
+  resetAddForm();
+  setupMidnightReset();
+  startReminderLoop();
+
+  try {
+    const hash = (window.location.hash || "").replace("#", "");
+    if (VALID.includes(hash)) showPage(hash);
+  } catch (_) {}
+
 })();
 </script>
 </body>
