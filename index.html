@@ -23,9 +23,6 @@ tailwind.config = {
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-storage-compat.js"></script>
 
-<!-- ============ SORTABLEJS (Untuk Drag & Drop) ============ -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
 <style>
   * { -webkit-tap-highlight-color: transparent; }
   body { touch-action: manipulation; user-select: none; transition: background 0.3s ease; }
@@ -97,8 +94,14 @@ tailwind.config = {
 
   #icon-preview { transition: all 0.2s ease; }
   .emoji-opt { transition: transform 0.15s ease; }
-  .freq-btn, .rt-btn { transition: all 0.2s ease; }
-  .habit-item { transition: background-color 0.15s ease; }
+  .freq-btn, .rt-btn, .target-mode-btn { transition: all 0.2s ease; }
+
+  .habit-item {
+    transition: background-color 0.15s ease;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
   .habit-item:active { background-color: rgb(248 250 252); }
 
   body.hide-nav #bottom-nav { display: none !important; }
@@ -152,7 +155,6 @@ tailwind.config = {
       border-color: rgba(51, 65, 85, 0.5);
   }
 
-  /* FIX: background putih + varian transparan */
   html.dark .bg-white,
   html.dark .bg-white\/95,
   html.dark .bg-white\/90,
@@ -260,6 +262,27 @@ tailwind.config = {
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
   .color-btn:active { transform: scale(0.9); }
+
+  /* ============ LONG PRESS CONTEXT MENU ============ */
+  .habit-item.lp-pressing {
+    transform: scale(0.97);
+    background-color: #eef2ff !important;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+  .habit-item.lp-active {
+    background-color: #e0e7ff !important;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.35);
+  }
+  @keyframes ctx-pop {
+    0%   { transform: scale(0.85) translateY(6px); opacity: 0; }
+    100% { transform: scale(1)   translateY(0);   opacity: 1; }
+  }
+  .ctx-menu { animation: ctx-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .ctx-item { transition: background 0.12s ease; }
+  .ctx-item:active { background: rgba(255,255,255,0.10); }
+  .ctx-item[disabled] { pointer-events: none; }
+  html.dark .habit-item.lp-pressing { background-color: #1e3a5f !important; }
+  html.dark .habit-item.lp-active   { background-color: #243044 !important; }
 </style>
 </head>
 <body class="bg-[#F4F7FC] text-slate-800 antialiased min-h-screen flex justify-center selection:bg-blue-500 selection:text-white font-sans">
@@ -628,6 +651,7 @@ tailwind.config = {
         <input type="hidden" id="habit-icon" value="fa-solid fa-sun" />
         <input type="hidden" id="habit-icon-bg" value="bg-amber-50" />
         <input type="hidden" id="habit-icon-color" value="text-amber-500" />
+        
         <section class="flex flex-col items-center justify-center pt-1 pb-2">
           <button type="button" id="icon-preview" aria-label="Pilih ikon habit"
             class="relative w-24 h-24 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-inner active:scale-95 transition-all">
@@ -643,21 +667,30 @@ tailwind.config = {
             <div id="icon-color-picker" class="flex space-x-3"></div>
           </div>
         </section>
+
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-name">Nama Habit</label>
           <input class="w-full h-12 px-4 rounded-2xl bg-white border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
             id="habit-name" name="habit_name" placeholder="Contoh: Minum air putih" type="text" maxlength="60" required/>
         </div>
 
-        <!-- TARGET HARIAN BARU -->
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-target">Target Harian (Berapa kali?)</label>
+        <!-- MODE TARGET BARU -->
+        <div class="space-y-1.5 pt-1">
+          <span class="block text-xs font-semibold text-slate-700 ml-0.5">Mode Habit</span>
+          <div id="target-mode-group" class="grid grid-cols-2 gap-2 bg-slate-200/70 p-1 rounded-2xl">
+            <button class="target-mode-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all" data-mode="single" type="button">1x Selesai</button>
+            <button class="target-mode-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-mode="multi" type="button">Target Harian</button>
+          </div>
+        </div>
+
+        <div id="target-input-wrapper" class="space-y-1.5 pt-2 hidden">
+          <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-target">Jumlah Target (Kali)</label>
           <div class="relative flex items-center">
             <span class="absolute left-4 text-slate-400 pointer-events-none"><i class="fa-solid fa-bullseye text-sm"></i></span>
             <input class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white border border-slate-200/80 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-              id="habit-target" name="habit_target" type="number" min="1" max="99" value="1"/>
+              id="habit-target" name="habit_target" type="number" min="2" max="99" value="8"/>
           </div>
-          <p class="text-[10px] text-slate-400 ml-1">Isi 1 jika hanya perlu sekali. Contoh: isi 8 untuk minum 8 gelas air.</p>
+          <p class="text-[10px] text-slate-400 ml-1">Contoh: isi 8 untuk minum 8 gelas air sehari.</p>
         </div>
 
         <div class="space-y-1.5 pt-1">
@@ -667,6 +700,7 @@ tailwind.config = {
             <button class="rt-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all" data-type="anytime" type="button">Tanpa Jam</button>
           </div>
         </div>
+        
         <div id="time-input-wrapper" class="space-y-1.5 pt-2">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="habit-time">Waktu Alarm</label>
           <div class="relative flex items-center">
@@ -675,6 +709,7 @@ tailwind.config = {
               id="habit-time" name="habit_time" type="time" value="07:00"/>
           </div>
         </div>
+        
         <div class="pt-1 flex items-center justify-between">
           <div class="pr-2">
             <h2 class="text-xs font-semibold text-slate-800 leading-tight" id="reminder-label">Pengingat</h2>
@@ -685,6 +720,7 @@ tailwind.config = {
             <div class="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
         </div>
+
         <div class="space-y-1.5 pt-1">
           <label class="block text-xs font-semibold text-slate-700 ml-0.5" for="reminder-note">
             Catatan Pengingat <span class="text-slate-400 font-normal">(Opsional)</span>
@@ -693,6 +729,7 @@ tailwind.config = {
             id="reminder-note" rows="3" maxlength="200"
             placeholder="Tulis pesan pengingat saat alarm berbunyi..."></textarea>
         </div>
+
         <div class="space-y-1.5 pt-1">
           <span class="block text-xs font-semibold text-slate-700 ml-0.5">Frekuensi</span>
           <div id="frequency-group" class="grid grid-cols-3 gap-2 bg-slate-200/70 p-1 rounded-2xl">
@@ -895,6 +932,9 @@ tailwind.config = {
     <div id="modal-body" class="bg-white rounded-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto"></div>
   </div>
 </div>
+
+<!-- ==================== LONG-PRESS CONTEXT MENU ==================== -->
+<div id="habit-context-menu" class="hidden fixed z-[250]"></div>
 
 <script>
 (function () {
@@ -1209,18 +1249,20 @@ tailwind.config = {
 
   function computeCompletionRate(habit) {
     const hh = habit.history || {};
-    const totalActions = Object.values(hh).reduce((a,b) => a + b, 0);
-    if (totalActions === 0) return 0;
+    const target = habit.target || 1;
+    let daysDone = 0;
+    Object.values(hh).forEach(v => {
+      if (v >= target) daysDone++;
+    });
+
+    if (daysDone === 0) return 0;
     
     const createdAt = habit.createdAt ? new Date(habit.createdAt) : new Date();
     createdAt.setHours(0,0,0,0);
     const today = new Date(); today.setHours(0,0,0,0);
     const totalDays = Math.max(1, Math.floor((today - createdAt) / 86400000) + 1);
     
-    const target = habit.target || 1;
-    const expectedActions = totalDays * target;
-    
-    return Math.min(100, Math.round((totalActions / expectedActions) * 100));
+    return Math.min(100, Math.round((daysDone / totalDays) * 100));
   }
 
   function recomputeGlobalStats() {
@@ -1228,9 +1270,12 @@ tailwind.config = {
     const history = {};
     state.habits.forEach(h => {
       const hh = h.history || {};
+      const target = h.target || 1;
       Object.entries(hh).forEach(([k, v]) => {
-        if (v > 0) { 
-          totalDone += v; 
+        if (v >= target) { 
+          totalDone++; 
+        }
+        if (v > 0) {
           history[k] = (history[k] || 0) + 1; 
         }
       });
@@ -1291,9 +1336,6 @@ tailwind.config = {
     return `
     <article class="habit-item bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100 transition-all" data-id="${esc(h.id)}">
       <div class="flex items-center space-x-2.5 min-w-0 w-full">
-        <div class="habit-drag-handle text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing p-1 -ml-1 flex-shrink-0">
-          <i class="fa-solid fa-grip-vertical text-sm"></i>
-        </div>
         <div class="w-11 h-11 rounded-xl ${esc(h.bg || 'bg-slate-100')} flex items-center justify-center flex-shrink-0">
           ${habitIconHTML(h)}
         </div>
@@ -1347,28 +1389,203 @@ tailwind.config = {
     emptyEl.classList.toggle("hidden", habits.length > 0);
     noneTodayEl.classList.toggle("hidden", !(habits.length > 0 && todayHabits.length === 0));
 
-    if (typeof Sortable !== 'undefined' && !groupEl._sortable) {
-      groupEl._sortable = new Sortable(groupEl, {
-        animation: 150,
-        handle: '.habit-drag-handle',
-        ghostClass: 'opacity-50',
-        onEnd: function () {
-          const items = Array.from(groupEl.children);
-          const orderedIds = items.map(el => el.dataset.id);
-          const ordered = [];
-          orderedIds.forEach(id => {
-            const h = state.habits.find(x => String(x.id) === String(id));
-            if (h) ordered.push(h);
-          });
-          state.habits.forEach(h => {
-            if (!orderedIds.includes(String(h.id))) ordered.push(h);
-          });
-          state.habits = ordered;
-          save();
-          renderHome();
-        }
-      });
+    // Bind long-press sekali saja
+    if (!groupEl._longPressBound) {
+      groupEl._longPressBound = true;
+      bindHabitLongPress();
     }
+  }
+
+  /* =====================================================
+     LONG-PRESS CONTEXT MENU (pindahkan habit)
+     ===================================================== */
+  const ctxMenu = document.getElementById("habit-context-menu");
+  let lpTimer = null;
+  let lpTargetId = null;
+  let lpStartX = 0, lpStartY = 0;
+  let menuOpen = false;
+  let suppressClickUntil = 0;
+
+  function closeCtxMenu() {
+    if (!menuOpen) return;
+    menuOpen = false;
+    ctxMenu.classList.add("hidden");
+    ctxMenu.innerHTML = "";
+    document.querySelectorAll(".habit-item.lp-active")
+      .forEach(el => el.classList.remove("lp-active"));
+  }
+
+  function openCtxMenu(card, id) {
+    const habit = state.habits.find(h => String(h.id) === String(id));
+    if (!habit) return;
+
+    const todayHabits = state.habits.filter(isHabitToday);
+    const visIdx = todayHabits.findIndex(h => String(h.id) === String(id));
+    const canUp   = visIdx > 0;
+    const canDown = visIdx >= 0 && visIdx < todayHabits.length - 1;
+
+    ctxMenu.innerHTML = `
+      <div class="ctx-menu bg-[#2b2f38] text-white rounded-2xl shadow-2xl overflow-hidden min-w-[200px] border border-white/10">
+        <button data-act="up" ${canUp ? '' : 'disabled'}
+          class="ctx-item w-full flex items-center space-x-3 px-4 py-3 text-left text-sm font-semibold ${canUp ? '' : 'opacity-30'}">
+          <i class="fa-solid fa-arrow-up text-xs w-4"></i><span>Pindah ke Atas</span>
+        </button>
+        <div class="h-px bg-white/10 mx-2"></div>
+        <button data-act="down" ${canDown ? '' : 'disabled'}
+          class="ctx-item w-full flex items-center space-x-3 px-4 py-3 text-left text-sm font-semibold ${canDown ? '' : 'opacity-30'}">
+          <i class="fa-solid fa-arrow-down text-xs w-4"></i><span>Pindah ke Bawah</span>
+        </button>
+        <div class="h-px bg-white/10 mx-2"></div>
+        <button data-act="edit"
+          class="ctx-item w-full flex items-center space-x-3 px-4 py-3 text-left text-sm font-semibold">
+          <i class="fa-solid fa-pen text-xs w-4"></i><span>Edit Habit</span>
+        </button>
+        <div class="h-px bg-white/10 mx-2"></div>
+        <button data-act="delete"
+          class="ctx-item w-full flex items-center space-x-3 px-4 py-3 text-left text-sm font-semibold text-rose-300">
+          <i class="fa-solid fa-trash-can text-xs w-4"></i><span>Hapus Habit</span>
+        </button>
+      </div>`;
+
+    ctxMenu.classList.remove("hidden");
+    menuOpen = true;
+    suppressClickUntil = Date.now() + 500;
+    card.classList.add("lp-active");
+
+    const rect = card.getBoundingClientRect();
+    const mRect = ctxMenu.getBoundingClientRect();
+    let top  = rect.bottom + 8;
+    let left = rect.left + rect.width / 2 - mRect.width / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - mRect.width - 12));
+    if (top + mRect.height > window.innerHeight - 12) {
+      top = rect.top - mRect.height - 8;
+      if (top < 12) top = 12;
+    }
+    ctxMenu.style.top  = top  + "px";
+    ctxMenu.style.left = left + "px";
+
+    ctxMenu.querySelectorAll("[data-act]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (btn.disabled) return;
+        handleCtxAction(btn.dataset.act, id);
+      });
+    });
+  }
+
+  function handleCtxAction(act, id) {
+    closeCtxMenu();
+
+    const targetHabit = state.habits.find(h => String(h.id) === String(id));
+    if (!targetHabit) return;
+
+    if (act === "up" || act === "down") {
+      const todayHabits = state.habits.filter(isHabitToday);
+      const visIdx = todayHabits.findIndex(h => String(h.id) === String(id));
+      if (visIdx < 0) return;
+
+      const neighborVisIdx = act === "up" ? visIdx - 1 : visIdx + 1;
+      const neighborHabit  = todayHabits[neighborVisIdx];
+      if (!neighborHabit) return;
+
+      const gi = state.habits.indexOf(targetHabit);
+      const gn = state.habits.indexOf(neighborHabit);
+      [state.habits[gi], state.habits[gn]] = [state.habits[gn], state.habits[gi]];
+
+      save(); renderHome(); flashHabit(id);
+      return;
+    }
+
+    if (act === "edit")   openDetail(id);
+    if (act === "delete") confirmDeleteHabit(id);
+  }
+
+  function flashHabit(id) {
+    setTimeout(() => {
+      const el = groupEl.querySelector(`.habit-item[data-id="${id}"]`);
+      if (!el) return;
+      el.style.transition = "background-color 0.35s ease";
+      el.style.backgroundColor = "#dbeafe";
+      setTimeout(() => { el.style.backgroundColor = ""; }, 700);
+    }, 30);
+  }
+
+  function confirmDeleteHabit(id) {
+    const habit = state.habits.find(h => String(h.id) === String(id));
+    if (!habit) return;
+    openModal(`
+      <div class="flex flex-col items-center mb-3">
+        <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
+          <i class="fa-solid fa-trash-can text-xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">Hapus Habit?</h3>
+        <p class="text-[11px] text-slate-500 mt-1 text-center px-2">"${esc(habit.title)}" akan dihapus permanen.</p>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button id="del-cancel" type="button" class="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-semibold">Batal</button>
+        <button id="del-confirm" type="button" class="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold shadow-md shadow-rose-500/25">Hapus</button>
+      </div>
+    `);
+    document.getElementById("del-cancel").addEventListener("click", closeModal);
+    document.getElementById("del-confirm").addEventListener("click", () => {
+      state.habits = state.habits.filter(h => String(h.id) !== String(id));
+      recomputeGlobalStats(); save();
+      closeModal();
+      if (currentPage === "detail") {
+        currentDetailId = null;
+        showPage("home");
+      } else {
+        renderHome();
+      }
+      showToast('Habit dihapus <i class="twa twa-wastebasket"></i>');
+    });
+  }
+
+  function bindHabitLongPress() {
+    groupEl.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".habit-toggle-btn, .habit-minus-btn")) return;
+      const card = e.target.closest(".habit-item");
+      if (!card) return;
+
+      if (menuOpen) closeCtxMenu();
+
+      lpTargetId = card.dataset.id;
+      lpStartX = e.clientX; lpStartY = e.clientY;
+      card.classList.add("lp-pressing");
+
+      if (lpTimer) clearTimeout(lpTimer);
+      lpTimer = setTimeout(() => {
+        lpTimer = null;
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch (_) {}
+        card.classList.remove("lp-pressing");
+        openCtxMenu(card, lpTargetId);
+      }, 450);
+    }, { passive: true });
+
+    const cancel = () => {
+      if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      document.querySelectorAll(".habit-item.lp-pressing")
+        .forEach(el => el.classList.remove("lp-pressing"));
+    };
+
+    groupEl.addEventListener("pointerup", cancel);
+    groupEl.addEventListener("pointercancel", cancel);
+    groupEl.addEventListener("pointerleave", cancel);
+    groupEl.addEventListener("pointermove", (e) => {
+      if (!lpTimer) return;
+      if (Math.abs(e.clientX - lpStartX) > 8 ||
+          Math.abs(e.clientY - lpStartY) > 8) cancel();
+    });
+
+    document.addEventListener("pointerdown", (e) => {
+      if (!menuOpen) return;
+      if (ctxMenu.contains(e.target)) return;
+      if (e.target.closest(".habit-item")) return;
+      closeCtxMenu();
+    }, true);
+
+    window.addEventListener("scroll", closeCtxMenu, true);
+    window.addEventListener("resize", closeCtxMenu);
   }
 
   /* =====================================================
@@ -1495,11 +1712,15 @@ tailwind.config = {
     document.getElementById("detail-subtitle").textContent = (habit.subtitle || "") + (target > 1 ? ` · Target: ${target}x` : "");
     
     const hh = habit.history || {};
-    const doneCount = Object.values(hh).reduce((a,b) => a + b, 0);
+    let doneDays = 0;
+    Object.values(hh).forEach(v => {
+      if (v >= target) doneDays++;
+    });
+
     const streak = computeStreak(hh);
     const rate = computeCompletionRate(habit);
     
-    document.getElementById("detail-done").textContent = doneCount;
+    document.getElementById("detail-done").textContent = doneDays;
     document.getElementById("detail-streak").textContent = streak;
     document.getElementById("detail-rate").textContent = rate + "%";
     document.getElementById("detail-note").textContent = (habit.note && habit.note.trim()) || "Belum ada catatan pengingat";
@@ -1539,17 +1760,37 @@ tailwind.config = {
      ===================================================== */
   const freqBtns = document.querySelectorAll(".freq-btn");
   const rtBtns = document.querySelectorAll(".rt-btn");
+  const targetModeBtns = document.querySelectorAll(".target-mode-btn");
   const customDaysPanel = document.getElementById("custom-days-panel");
   const timeInputWrapper = document.getElementById("time-input-wrapper");
+  const targetInputWrapper = document.getElementById("target-input-wrapper");
+  
   let selectedFreq = "daily";
   let selectedReminderType = "alarm";
+  let selectedTargetMode = "single";
+
+  targetModeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      targetModeBtns.forEach(b => {
+        b.className = "target-mode-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+      });
+      btn.className = "target-mode-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all";
+      selectedTargetMode = btn.dataset.mode;
+      
+      if (selectedTargetMode === "multi") {
+        targetInputWrapper.classList.remove("hidden");
+      } else {
+        targetInputWrapper.classList.add("hidden");
+      }
+    });
+  });
 
   function resetAddForm() {
     document.getElementById("add-habit-form").reset();
     document.getElementById("habit-icon").value = "fa-solid fa-sun";
     document.getElementById("habit-icon-bg").value = "bg-amber-50";
     document.getElementById("habit-icon-color").value = "text-amber-500";
-    document.getElementById("habit-target").value = "1";
+    document.getElementById("habit-target").value = "8";
 
     selectedIconClass = "fa-solid fa-sun";
     selectedIconColor = "text-amber-500";
@@ -1581,6 +1822,14 @@ tailwind.config = {
     timeInputWrapper.classList.remove("hidden");
     document.getElementById("habit-time").value = "07:00";
 
+    selectedTargetMode = "single";
+    targetModeBtns.forEach((b, i) => {
+      b.className = i === 0
+        ? "target-mode-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "target-mode-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+    targetInputWrapper.classList.add("hidden");
+
     document.getElementById("add-page-title").textContent = "Tambah Habit";
     document.getElementById("btn-save-habit").textContent = "Simpan";
     editingHabitId = null;
@@ -1596,7 +1845,7 @@ tailwind.config = {
     document.getElementById("add-page-title").textContent = "Edit Habit";
     document.getElementById("btn-save-habit").textContent = "Simpan Perubahan";
     document.getElementById("habit-name").value = habit.title;
-    document.getElementById("habit-target").value = habit.target || 1;
+    document.getElementById("habit-target").value = habit.target > 1 ? habit.target : 8;
     document.getElementById("habit-time").value = habit.time || "07:00";
     document.getElementById("reminder-switch").checked = !!habit.reminder;
     document.getElementById("reminder-note").value = habit.note || "";
@@ -1642,6 +1891,18 @@ tailwind.config = {
     });
     if (selectedReminderType === "alarm") timeInputWrapper.classList.remove("hidden");
     else timeInputWrapper.classList.add("hidden");
+
+    const isMulti = habit.target > 1;
+    selectedTargetMode = isMulti ? "multi" : "single";
+    targetModeBtns.forEach((b, i) => {
+      const isMultiBtn = i === 1;
+      const isActive = (selectedTargetMode === "multi" && isMultiBtn) || (selectedTargetMode === "single" && !isMultiBtn);
+      b.className = isActive
+        ? "target-mode-btn py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 shadow-sm transition-all"
+        : "target-mode-btn py-2 text-xs font-medium text-slate-600 rounded-xl transition-all";
+    });
+    if (isMulti) targetInputWrapper.classList.remove("hidden");
+    else targetInputWrapper.classList.add("hidden");
   }
 
   document.getElementById("detail-edit-btn").addEventListener("click", () => {
@@ -1757,7 +2018,8 @@ tailwind.config = {
     let maxCompleted = -1;
 
     state.habits.forEach(h => {
-      const completedCount = Object.values(h.history || {}).reduce((a,b) => a + b, 0);
+      const target = h.target || 1;
+      const completedCount = Object.values(h.history || {}).filter(v => v >= target).length;
       if (completedCount > maxCompleted) {
         maxCompleted = completedCount;
         topHabit = h;
@@ -1834,8 +2096,9 @@ tailwind.config = {
     
     let totalDone = 0;
     state.habits.forEach(h => {
+      const target = h.target || 1;
       Object.values(h.history || {}).forEach(v => {
-        totalDone += v;
+        if (v >= target) totalDone++;
       });
     });
 
@@ -2284,7 +2547,12 @@ tailwind.config = {
      HABIT TOGGLE & DELETE (MULTI-TARGET)
      ===================================================== */
   groupEl.addEventListener("click", (e) => {
-    if (e.target.closest(".habit-drag-handle")) return;
+    // Guard: skip klik yang muncul tepat setelah long-press
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
 
     const minusBtn = e.target.closest(".habit-minus-btn");
     const toggleBtn = e.target.closest(".habit-toggle-btn");
@@ -2324,7 +2592,10 @@ tailwind.config = {
           renderHome();
         }
       } else {
-        showToast("Target sudah tercapai hari ini!");
+        delete habit.history[logicalTodayKey];
+        recomputeGlobalStats();
+        save();
+        renderHome();
       }
       return;
     }
@@ -2337,15 +2608,8 @@ tailwind.config = {
   document.getElementById("celebrate-ok-btn").addEventListener("click", () => showPage("home"));
 
   document.getElementById("detail-delete-btn").addEventListener("click", () => {
-    const habit = state.habits.find(h => String(h.id) === String(currentDetailId));
-    if (!habit) return;
-    if (!confirm(`Hapus habit "${habit.title}"?`)) return;
-    state.habits = state.habits.filter(h => String(h.id) !== String(currentDetailId));
-    recomputeGlobalStats();
-    save();
-    currentDetailId = null;
-    showToast('Habit dihapus <i class="twa twa-wastebasket"></i>');
-    showPage("home");
+    if (!currentDetailId) return;
+    confirmDeleteHabit(currentDetailId);
   });
 
   navEl.addEventListener("click", (e) => {
@@ -2418,13 +2682,13 @@ tailwind.config = {
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fa-solid fa-check text-[10px]"></i>
           </div>
-          <p class="text-xs text-slate-600 leading-snug">Bisa atur urutan habit (drag & drop ikon garis di kiri).</p>
+          <p class="text-xs text-slate-600 leading-snug">Bisa atur urutan habit (tekan &amp; tahan kartu untuk menu pindahkan).</p>
         </div>
         <div class="flex items-start space-x-3">
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
             <i class="fa-solid fa-check text-[10px]"></i>
           </div>
-          <p class="text-xs text-slate-600 leading-snug">Pasang Wallpaper aplikasi & Header (Mendukung GIF).</p>
+          <p class="text-xs text-slate-600 leading-snug">Pasang Wallpaper aplikasi &amp; Header (Mendukung GIF).</p>
         </div>
         <div class="flex items-start space-x-3">
           <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
@@ -2917,8 +3181,13 @@ tailwind.config = {
     const reminder = document.getElementById("reminder-switch").checked;
     const note = document.getElementById("reminder-note").value.trim();
     const daysArr = Array.from(selectedDays);
-    const targetVal = parseInt(document.getElementById("habit-target").value) || 1;
     
+    let targetVal = 1;
+    if (selectedTargetMode === "multi") {
+      targetVal = parseInt(document.getElementById("habit-target").value) || 2;
+      if (targetVal < 2) targetVal = 2;
+    }
+
     if (daysArr.length === 0) { showToast("Pilih minimal satu hari"); return; }
 
     if (editingHabitId) {
